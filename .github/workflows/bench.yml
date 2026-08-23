@@ -16,10 +16,11 @@ jobs:
           import { pipeline } from '@xenova/transformers';
           const MODELS = [
             'Xenova/all-MiniLM-L6-v2',
-            'Xenova/all-mpnet-base-v2',
-            'Xenova/bge-small-en-v1.5',
-            'Xenova/bge-base-en-v1.5',
-            'Xenova/gte-small'
+            'Xenova/all-MiniLM-L12-v2',
+            'Xenova/paraphrase-MiniLM-L6-v2',
+            'Xenova/multi-qa-MiniLM-L6-cos-v1',
+            'Xenova/all-distilroberta-v1',
+            'Xenova/paraphrase-mpnet-base-v2'
           ];
           const PAIRS = {
             related:   [['head','hair'],['bread','butter'],['sing','song'],['green','grass'],['mother','father'],['bird','nest']],
