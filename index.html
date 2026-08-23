@@ -365,13 +365,20 @@ function present() {
 
   if (S.speak && 'speechSynthesis' in window) {
     const u = new SpeechSynthesisUtterance(w); u.rate = 0.95; u.lang = 'en-US';
-    let started = false;
+    let started = false, armed = false;
+    const trial = S.i;
     S.ignoreUntil = Infinity;
+    // arm() is the only exit from the muted state. Normally reached via onend, but iOS
+    // Safari loses utterance events (especially after cancel()), which used to leave
+    // ignoreUntil at Infinity and the mic deaf for the rest of the session. Two
+    // watchdogs guarantee it runs; the trial guard keeps a stale timer from unmuting
+    // during the next word's utterance.
+    const arm = () => { if (armed || S.i !== trial) return; armed = true; S.ignoreUntil = performance.now() + 250; if (!S.t0) { $('word').classList.remove('hidden'); startClock(); } };
     u.onstart = () => { started = true; $('word').classList.remove('hidden'); startClock(); };
-    u.onend = () => { S.ignoreUntil = performance.now() + 250; if (!started) { $('word').classList.remove('hidden'); startClock(); } };
-    u.onerror = u.onend;
+    u.onend = arm; u.onerror = arm;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
-    setTimeout(() => { if (!started && !S.t0) u.onend(); }, 800);
+    setTimeout(() => { if (!started) arm(); }, 800);
+    setTimeout(arm, 3000);
   } else {
     setTimeout(() => { S.ignoreUntil = 0; $('word').classList.remove('hidden'); startClock(); }, 400);
   }
@@ -390,12 +397,14 @@ function startClock() {
 const Mic = (() => {
   let stream = null, ctx = null, analyser = null, buf = null, rec = null, active = false, raf = null;
   let floor = 0, floorSamples = 0;
-  const state = $('micstate');
+  const state = $('micstate'), dot = state.firstChild;
   const setState = (txt, live) => { state.lastChild.textContent = txt; state.classList.toggle('live', !!live); };
   const rms = () => { analyser.getFloatTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i]; return Math.sqrt(s / buf.length); };
   function tick() {
     if (!active) return;
     const level = rms();
+    dot.style.opacity = Math.min(1, 0.35 + level * 25);
+    dot.style.transform = `scale(${1 + Math.min(1.2, level * 30)})`;
     if (floorSamples < 40) { floor = (floor * floorSamples + level) / ++floorSamples; }
     const now = performance.now();
     if (S.t0 && S.firstInputAt === null && now > S.ignoreUntil && level > Math.max(floor * 3, 0.02)) S.firstInputAt = now;
@@ -423,6 +432,8 @@ const Mic = (() => {
     };
     rec.onerror = e => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setState('mic blocked', false); active = false; S.mode = 'type'; $('micpane').classList.add('hide'); $('typepane').classList.remove('hide'); $('typed').focus(); }
+      else if (e.error === 'audio-capture') setState('recognizer gets no audio', false);
+      else if (e.error === 'network') setState('speech service unreachable', false);
     };
     rec.onend = () => { if (active) setTimeout(startRecognizer, 200); else setState('mic off', false); };
     try { rec.start(); } catch (err) { setTimeout(startRecognizer, 500); }
