@@ -1,0 +1,53 @@
+# One-shot benchmark: cosine geometry of candidate embedding models on the word
+# pairs the app's thresholds are calibrated against. Read the numbers from the
+# logs before swapping the scorer model.
+name: Embedding model bench
+on:
+  workflow_dispatch:
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install transformers.js
+        run: npm init -y >/dev/null && npm i @xenova/transformers@2.17.2 >/dev/null
+      - name: Bench models
+        run: |
+          cat > bench.mjs <<'JS'
+          import { pipeline } from '@xenova/transformers';
+          const MODELS = [
+            'Xenova/all-MiniLM-L6-v2',
+            'Xenova/all-mpnet-base-v2',
+            'Xenova/bge-small-en-v1.5',
+            'Xenova/bge-base-en-v1.5',
+            'Xenova/gte-small'
+          ];
+          const PAIRS = {
+            related:   [['head','hair'],['bread','butter'],['sing','song'],['green','grass'],['mother','father'],['bird','nest']],
+            antonym:   [['cold','hot'],['dead','alive'],['rich','poor']],
+            symbolic:  [['dead','grandfather'],['luck','destiny'],['lamp','mother'],['anxiety','ocean']],
+            unrelated: [['window','tuesday'],['frog','spreadsheet'],['needle','parliament'],['salt','democracy']],
+            anchors:   [['divine mission','empire'],['divine mission','hair'],['feeling inferior','worthless'],['feeling inferior','butter'],['repressed feeling','craving'],['my mother','brother']]
+          };
+          const stats = a => ({ mean: a.reduce((x,y)=>x+y,0)/a.length, min: Math.min(...a), max: Math.max(...a) });
+          for (const m of MODELS) {
+            try {
+              const pipe = await pipeline('feature-extraction', m);
+              console.log('\n=== ' + m + ' ===');
+              const groupMeans = {};
+              for (const [group, pairs] of Object.entries(PAIRS)) {
+                const scores = [];
+                for (const [a, b] of pairs) {
+                  const out = (await pipe([a, b], { pooling: 'mean', normalize: true })).tolist();
+                  let d = 0; for (let k = 0; k < out[0].length; k++) d += out[0][k]*out[1][k];
+                  scores.push(d);
+                  console.log('  ' + group.padEnd(9) + (a+' ~ '+b).padEnd(32) + d.toFixed(3));
+                }
+                groupMeans[group] = stats(scores);
+              }
+              for (const [g, st] of Object.entries(groupMeans))
+                console.log('  MEAN ' + g.padEnd(9) + st.mean.toFixed(3) + '  [' + st.min.toFixed(3) + ' .. ' + st.max.toFixed(3) + ']');
+              console.log('  SEPARATION related-vs-unrelated: ' + (groupMeans.related.mean - groupMeans.unrelated.mean).toFixed(3));
+            } catch (e) { console.log('\n=== ' + m + ' ===\n  FAILED: ' + String(e).slice(0, 200)); }
+          }
+          JS
+          node bench.mjs
