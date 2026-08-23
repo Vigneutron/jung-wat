@@ -286,9 +286,11 @@ const CONFIG = {
   stereotypyMin: 3,          // same response to >= this many different stimuli
   patternBreakShare: 0.5,    // PATTERN_BREAK only when the dominant type holds >= this share of responses
   frameworkLens: true,       // experimental stacked Freud/Adler/Jung lens on the results sheet
-  fwSemThreshold: 0.18,      // min anchor-phrase cosine for a semantic hit (CI bench 2026-08-23: real hits 0.22-0.38, non-hits <= 0.08 on paraphrase-MiniLM-L6-v2)
+  fwSemThreshold: 0.25,      // min anchor cosine for a semantic hit; single-word responses only - phrase
+                             // responses have a far higher noise floor and are excluded (field data 2026-08-23)
   shortRtRatio: 0.4,         // context flag: answer at or under this fraction of the median (a snap answer can be a guard)
-  symbolicMaxRelatedness: 0.30 // poem test ceiling: below this, a non-table single-word answer is a leap, not a category
+  symbolicMaxRelatedness: 0.30, // poem test ceiling: below this, a non-table single-word answer is a leap, not a category
+  patternMinN: 20            // PATTERN_BREAK and similar share-of-run measures need at least this many answers
 };
 
 /* ---------------- Lexical knowledge for the rule classifier ----------------
@@ -645,6 +647,12 @@ function classifyRule(item) {
   if (r === sBare) return out('remainder', 'repetition');
   const words = r.split(' ');
 
+  // detect phrase-completions on the raw response: norm() strips a leading "to ",
+  // which would hide starters like "to me" (lie -> "to me", brother -> "where art thou")
+  const rawWords = String(item.response || '').trim().toLowerCase().split(/\s+/);
+  if (rawWords.length >= 2 && ['to','with','of','and','or','in','on','for','the','a','art','thou','so','your'].includes(rawWords[0])) {
+    ev.push('continues the stimulus into a phrase'); return out('outer', 'speech-habit');
+  }
   if (/\b(i|me|my|mine|myself|we|our|us)\b/.test(r)) { ev.push('personal pronoun'); return out('egocentric', 'personal'); }
 
   if ((ANTONYMS[stim] || []).includes(r)) { ev.push('antonym'); return out('inner', 'contrast'); }
@@ -727,7 +735,7 @@ function analyse(items) {
     // in a dictionary entry. Operationalised: a one- or two-word answer with no table, sound,
     // or category link (nothing the hard rules could place) whose real-scorer relatedness sits
     // below the leap ceiling - too far for a shared category, close enough to be reachable.
-    if (it.response && r.split(' ').length <= 2 && it.assoc && it.assoc.source !== 'rule' && it.assoc.type !== 'clang' &&
+    if (it.response && r.split(' ').length === 1 && it.assoc && it.assoc.source !== 'rule' && it.assoc.type !== 'clang' &&
         it.scorer && it.scorer !== 'lexical-heuristic' && it.relatedness !== null && it.relatedness < CONFIG.symbolicMaxRelatedness)
       it.flags.push('SYMBOLIC');
   });
@@ -744,8 +752,9 @@ function analyse(items) {
   else if (sub('definition') >= 0.20) reactionType = 'definition';
   else if (shares.outer + shares.clang >= 0.50) reactionType = 'superficial';
 
-  // pattern break: a response whose type departs from a strongly dominant type
-  if (dominant && dominant[1] >= CONFIG.patternBreakShare) {
+  // pattern break: a response whose type departs from a strongly dominant type.
+  // Meaningless on short runs: shares from a handful of answers are noise.
+  if (answered.length >= CONFIG.patternMinN && dominant && dominant[1] >= CONFIG.patternBreakShare) {
     items.forEach(it => {
       if (!it.response) return;
       const t = it.assoc.type;
@@ -807,7 +816,7 @@ const FW = {
    cosined here. Backend: one batched /api/score POST of (anchor, response) pairs.
    Returns null when no real scorer is available - the keyword tier then stands alone. */
 async function fwSemantic(items) {
-  const texts = [...new Set(items.filter(x => x.response).map(x => norm(x.response)))];
+  const texts = [...new Set(items.filter(x => x.response && norm(x.response).split(' ').length === 1).map(x => norm(x.response)))];
   if (!texts.length) return null;
   const anchors = ['freud', 'adler', 'jung'].flatMap(k => FW.anchors[k].map(a => ({ layer: k, a })));
   const simsByText = {};
@@ -1154,8 +1163,8 @@ async function finish() {
     <div class="shares">${['inner', 'outer', 'clang', 'remainder', 'egocentric'].map(t => `<span><b>${pct(A.shares[t])}</b> ${t}</span>`).join('')}${A.shares.unclassified ? `<span><b>${pct(A.shares.unclassified)}</b> unplaced (needs a scorer)</span>` : ''}</div>`;
   const loadedThemes = A.themes.filter(t => t.loaded), neutral = A.themes.filter(t => !t.loaded);
   const row = t => `<tr><td class="w">${t.label}</td><td class="t ${t.disturbed / t.total >= 0.5 ? 'hot' : ''}">${t.disturbed} / ${t.total}</td><td class="t">${t.indicators}</td></tr>`;
-  $('themes').innerHTML = `<thead><tr><th>Theme (loaded stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${loadedThemes.map(row).join('')}</tbody>
-    <thead><tr><th>Theme (neutral stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${neutral.map(row).join('')}</tbody>`;
+  $('themes').innerHTML = (loadedThemes.length ? `<thead><tr><th>Theme (loaded stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${loadedThemes.map(row).join('')}</tbody>` : '')
+    + (neutral.length ? `<thead><tr><th>Theme (neutral stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${neutral.map(row).join('')}</tbody>` : '');
 
   // framework lens (Layer 5)
   let fwSummary = null;
