@@ -219,6 +219,7 @@
   <div class="note" id="scorenote"></div>
   <div id="profile" class="profile"></div>
   <table id="themes" class="themes"></table>
+  <div id="fwlens"></div>
   <div class="eyebrow" style="margin-top:24px">Protocol</div>
   <table>
     <thead><tr><th>#</th><th>Stimulus</th><th>Response</th><th>RT</th><th>×med</th><th>Rel.</th></tr></thead>
@@ -264,7 +265,8 @@ const CONFIG = {
   investigatePrevious: true, // product requirement: queue the word before a disturbed one
   investigateNext: false,    // Jung's perseveration runs forward; enable to also queue the following word
   stereotypyMin: 3,          // same response to >= this many different stimuli
-  patternBreakShare: 0.5     // PATTERN_BREAK only when the dominant type holds >= this share of responses
+  patternBreakShare: 0.5,    // PATTERN_BREAK only when the dominant type holds >= this share of responses
+  frameworkLens: true        // experimental stacked Freud/Adler/Jung lens on the results sheet
 };
 
 /* ---------------- Lexical knowledge for the rule classifier ----------------
@@ -745,6 +747,76 @@ function analyse(items) {
 }
 
 
+/* ---------------- Layer 5: framework lens (experimental) ----------------
+   An interpretive overlay after the partner model: three frameworks stacked,
+   Freud at the base (negative relation to instinct; parental material), Adler
+   above it (social compensation, status), Jung on top (ego inflation). A direct
+   hit on a higher layer implies every layer beneath it. Heuristics only:
+   response keywords plus theme-of-stimulus signals gated on `disturbed`, so a
+   calm stock association (child -> mother, to pray -> god) does not fire. */
+const FW = {
+  parental: ['mother','mom','mum','mommy','mummy','mama','father','dad','daddy','papa','parent','parents','grandmother','grandma','grandfather','grandpa'],
+  freudThemes: ['sexuality','need','body','family_love'],
+  adler: ['better','best','worse','worst','superior','inferior','strong','stronger','strongest','weak','weakness','power','powerful','powerless','win','winner','winning','lose','loser','losing','fail','failure','success','successful','boss','leader','servant','slave','rich','richer','poor','poorer','status','rank','famous','fame','respect','respected','admire','admired','envy','envious','jealous','jealousy','shame','ashamed','embarrassed','embarrassment','humiliated','humiliation','proud','pride','prestige','impress','impressive','compete','competition','dominant','dominate','submissive','obey'],
+  adlerThemes: ['money','judgement'],
+  jung: ['god','gods','goddess','divine','holy','sacred','heaven','hell','devil','satan','angel','demon','soul','spirit','spiritual','eternal','eternity','everlasting','infinite','infinity','cosmic','cosmos','universe','universal','destiny','fate','prophecy','prophet','messiah','saviour','savior','salvation','redemption','enlightenment','enlightened','awakening','transcendence','transcendent','absolute','ultimate','supreme','almighty','immortal','immortality','glory','glorious','righteous','righteousness','perfection','utopia','revolution','ideology','worship','chosen']
+};
+function frameworkLens(items) {
+  const layers = { freud: [], adler: [], jung: [] };
+  items.forEach(it => {
+    const r = norm(it.response || '');
+    const words = r ? r.split(' ') : [];
+    const hit = list => words.find(w => list.includes(w));
+    // a plain stock/table answer only carries content weight if the item is also disturbed
+    const contentOk = it.disturbed || !(it.assoc && it.assoc.subtype === 'stock');
+    const ev = { freud: [], adler: [], jung: [] };
+    const pw = hit(FW.parental);
+    if (pw && contentOk) ev.freud.push('parental reference "' + pw + '"');
+    if (it.disturbed && FW.freudThemes.includes(it.theme)) ev.freud.push('disturbed on ' + (THEMES[it.theme] || it.theme) + ' stimulus');
+    if ((it.flags.includes('STEREOTYPY') || it.flags.includes('PERSEVERATION')) && FW.freudThemes.includes(it.theme)) ev.freud.push('compulsive pattern on an instinct-near stimulus');
+    const aw = hit(FW.adler);
+    if (aw && contentOk) ev.adler.push('status/comparison word "' + aw + '"');
+    if (it.disturbed && FW.adlerThemes.includes(it.theme)) ev.adler.push('disturbed on ' + (THEMES[it.theme] || it.theme) + ' stimulus');
+    const jw = hit(FW.jung);
+    if (jw && contentOk) ev.jung.push('inflated/ideological word "' + jw + '"');
+    const direct = { freud: ev.freud.length > 0, adler: ev.adler.length > 0, jung: ev.jung.length > 0 };
+    if (!direct.freud && !direct.adler && !direct.jung) { it.framework = null; return; }
+    const fw = {
+      jung: direct.jung ? { source: 'direct', evidence: ev.jung } : null,
+      adler: direct.adler ? { source: 'direct', evidence: ev.adler }
+           : direct.jung ? { source: 'implied', evidence: ['implied by the Jung layer (stacking rule)'] } : null,
+      freud: direct.freud ? { source: 'direct', evidence: ev.freud }
+           : { source: 'implied', evidence: ['implied by a layer above (stacking rule)'] },
+      apex: direct.jung ? 'jung' : direct.adler ? 'adler' : 'freud'
+    };
+    it.framework = fw;
+    ['freud', 'adler', 'jung'].forEach(k => { if (fw[k]) layers[k].push({ it, source: fw[k].source, evidence: fw[k].evidence }); });
+  });
+  return layers;
+}
+function renderFrameworkLens(layers) {
+  const meta = [
+    ['jung', 'Jung — ego inflation', 'lofty, ideological, spiritual or political absolutes'],
+    ['adler', 'Adler — social compensation', 'inferiority/superiority, posturing, status'],
+    ['freud', 'Freud — instinct & parental', 'repression or compulsion around instinct; mother/father material']
+  ];
+  const rows = meta.map(([k, label, sub]) => {
+    const direct = layers[k].filter(x => x.source === 'direct').length;
+    return '<tr><td class="w">' + label + '<div class="muted" style="font-size:12px">' + sub + '</div></td>' +
+      '<td class="t ' + (direct ? 'hot' : '') + '">' + direct + '</td><td class="t">' + layers[k].length + '</td></tr>';
+  }).join('');
+  const lists = meta.map(([k, label]) => {
+    const direct = layers[k].filter(x => x.source === 'direct');
+    if (!direct.length) return '';
+    return '<p class="legend" style="margin:6px 0 0"><b>' + label.split(' — ')[0] + ':</b> ' +
+      direct.slice(0, 10).map(x => x.it.stimulus + ' → ' + (x.it.response || '—') + ' <span class="muted">(' + x.evidence.join('; ') + ')</span>').join(' · ') +
+      (direct.length > 10 ? ' <span class="muted">+' + (direct.length - 10) + ' more</span>' : '') + '</p>';
+  }).join('');
+  $('fwlens').innerHTML = '<div class="eyebrow" style="margin-top:24px">Framework lens (experimental)</div>' +
+    '<table class="themes"><thead><tr><th>Layer (Jung on top, Freud at the base)</th><th>Direct</th><th>With implied</th></tr></thead><tbody>' + rows + '</tbody></table>' + lists +
+    '<p class="legend">An interpretive overlay, not a finding. Keyword and theme heuristics sort charged material into three stacked layers — Freud at the base (instinct, parental patterns), Adler above it (social compensation), Jung on top (ego inflation) — and a direct hit on a higher layer implies the layers beneath it. Common stock associations (child → mother, to pray → god) count only when the response is also disturbed. Read these as prompts for the follow-up interview, not verdicts.</p>';
+}
+
 /* ---------------- Import a saved session straight into analysis ----------------
    Accepts v1 and v2 exports. Missing fields are filled from META; classification and flags are
    recomputed, so an old export benefits from newer rules. If a scorer URL is set and the session
@@ -841,6 +913,15 @@ async function finish() {
   $('themes').innerHTML = `<thead><tr><th>Theme (loaded stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${loadedThemes.map(row).join('')}</tbody>
     <thead><tr><th>Theme (neutral stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${neutral.map(row).join('')}</tbody>`;
 
+  // framework lens (Layer 5)
+  let fwSummary = null;
+  if (CONFIG.frameworkLens) {
+    const FWL = frameworkLens(S.items);
+    renderFrameworkLens(FWL);
+    fwSummary = {};
+    ['freud', 'adler', 'jung'].forEach(k => { fwSummary[k] = { direct: FWL[k].filter(x => x.source === 'direct').length, withImplied: FWL[k].length }; });
+  } else { $('fwlens').innerHTML = ''; S.items.forEach(it => { it.framework = null; }); }
+
   // ledger
   const tb = $('ledger'); tb.innerHTML = '';
   S.items.forEach(it => {
@@ -857,7 +938,7 @@ async function finish() {
       <td class="c ${CONFIG.flagLowRelatedness && it.relatedness !== null && it.relatedness < CONFIG.relatedThreshold ? 'low' : ''}">${it.relatedness === null ? '—' : it.relatedness.toFixed(2)}</td>`;
     tb.appendChild(tr);
   });
-  S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, scorer, classifier, reactionType: A.reactionType, dominantType: A.dominant, typeShares: A.shares, themes: A.themes, config: CONFIG };
+  S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, scorer, classifier, reactionType: A.reactionType, dominantType: A.dominant, typeShares: A.shares, themes: A.themes, frameworks: fwSummary, config: CONFIG };
 }
 
 $('export').onclick = () => {
