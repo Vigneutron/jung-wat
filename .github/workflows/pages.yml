@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Verify the site serves the app
+        run: |
+          set -euo pipefail
+          url="${{ steps.deployment.outputs.page_url }}"
+          echo "Polling $url"
+          for i in $(seq 1 18); do
+            http=$(curl -s -o /tmp/body -w "%{http_code}" --max-time 15 "$url" || echo 000)
+            if grep -q "word association protocol" /tmp/body; then
+              echo "OK: $url serves the app (HTTP $http)."
+              exit 0
+            fi
+            echo "attempt $i: HTTP $http"; sleep 10
+          done
+          echo "::error::$url did not serve the app within 3 minutes (last HTTP $http)"
+          head -c 300 /tmp/body
+          exit 1
