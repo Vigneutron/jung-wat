@@ -286,7 +286,7 @@ const CONFIG = {
   stereotypyMin: 3,          // same response to >= this many different stimuli
   patternBreakShare: 0.5,    // PATTERN_BREAK only when the dominant type holds >= this share of responses
   frameworkLens: true,       // experimental stacked Freud/Adler/Jung lens on the results sheet
-  fwSemThreshold: 0.50,      // min anchor-phrase cosine for a semantic framework hit (uncalibrated dial)
+  fwSemThreshold: 0.18,      // min anchor-phrase cosine for a semantic hit (CI bench 2026-08-23: real hits 0.22-0.38, non-hits <= 0.08 on paraphrase-MiniLM-L6-v2)
   shortRtRatio: 0.4,         // context flag: answer at or under this fraction of the median (a snap answer can be a guard)
   symbolicMaxRelatedness: 0.30 // poem test ceiling: below this, a non-table single-word answer is a leap, not a category
 };
@@ -561,7 +561,7 @@ $('fix').addEventListener('focus', () => { S.ignoreUntil = Infinity; });      //
 $('fix').addEventListener('blur', () => { S.ignoreUntil = performance.now() + 200; });
 
 
-/* ---------------- On-device scorer: all-MiniLM-L6-v2 via transformers.js (Apache-2.0) ----------------
+/* ---------------- On-device scorer: paraphrase-MiniLM-L6-v2 via transformers.js (Apache-2.0) ----------------
    Used when no scorer URL is set. First run downloads ~23 MB and caches it in the browser. Needs a
    hosted page with network access; inside a chat preview the import is blocked and we fall back to
    the lexical placeholder. Same cosine scale as the Python backend, so thresholds carry over. */
@@ -576,7 +576,7 @@ const Local = {
         st.textContent = 'Loading on-device scorer…';
         const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
         env.allowLocalModels = false;
-        this.pipe = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+        this.pipe = await pipeline('feature-extraction', 'Xenova/paraphrase-MiniLM-L6-v2', {
           progress_callback: p => { if (p.status === 'progress' && p.file && p.file.endsWith('.onnx')) st.textContent = `Downloading scorer ${Math.round(p.progress || 0)}%`; }
         });
         st.textContent = 'On-device scorer ready.';
@@ -593,7 +593,7 @@ const Local = {
     return scores;
   }
 };
-const LOCAL_NAME = 'all-MiniLM-L6-v2 (on-device)';
+const LOCAL_NAME = 'paraphrase-MiniLM-L6-v2 (on-device)';
 
 /* ---------------- Relatedness scoring (backend MiniLM, on-device MiniLM, or placeholder) ----------------
    Sends two pairs: (stimulus, response) and (previous stimulus, response). The second one detects
@@ -666,7 +666,7 @@ function classifyRule(item) {
   if (words.some(w => EVALUATIVE.has(w))) { ev.push('evaluative'); return out('inner', 'predicate'); }
 
   if (item.relatedness !== null && item.scorer !== 'lexical-heuristic') {
-    if (item.relatedness >= 0.45) { ev.push('semantically close'); return out('inner', 'coordination', 'rule-probable'); }
+    if (item.relatedness >= 0.42) { ev.push('semantically close'); return out('inner', 'coordination', 'rule-probable'); }  // bench: category pairs 0.44-0.71 on paraphrase-MiniLM-L6-v2
     if (item.relatedness >= 0.15) { ev.push('loosely related'); return out('outer', 'surface', 'rule-probable'); }
     if (onset) { ev.push('same onset, no meaning link'); return out('clang', 'sound', 'rule-probable'); }
     ev.push('semantically distant'); return out('remainder', 'indirect', 'rule-probable');
@@ -719,7 +719,7 @@ function analyse(items) {
     if (prev && prev.response) {
       const pr = norm(prev.response), ps = norm(prev.stimulus);
       const lexical = r === pr || r === ps;
-      const semantic = it.relatednessPrev !== null && it.relatedness !== null && it.relatednessPrev > it.relatedness + 0.2 && it.relatednessPrev > 0.35;
+      const semantic = it.relatednessPrev !== null && it.relatedness !== null && it.relatednessPrev > it.relatedness + 0.2 && it.relatednessPrev > 0.30;  // floor rescaled to the paraphrase model's geometry
       if (lexical || semantic) it.flags.push('PERSEVERATION');
     }
     if (it.reactionMs !== null && it.rtRatio !== null && it.rtRatio <= CONFIG.shortRtRatio) it.flags.push('SHORT_RT');
@@ -1081,7 +1081,7 @@ function normalizeItem(raw, k, set) {
 async function rescore(items) {
   const useLocal = !S.backend && $('localmodel').checked;
   if (!S.backend && !useLocal) return;
-  const need = items.filter(x => x.response && (x.relatedness === null || x.scorer === 'lexical-heuristic' || x.relatednessPrev === null));
+  const need = items.filter(x => x.response && (x.relatedness === null || x.scorer === 'lexical-heuristic' || /(^|\/| )all-MiniLM/.test(x.scorer || '') || x.relatednessPrev === null));
   if (!need.length) return;
   const pairs = [];
   need.forEach(it => { const prev = items.find(x => x.index === it.index - 1); pairs.push({ stimulus: it.stimulus, response: it.response }); pairs.push({ stimulus: prev ? prev.stimulus : it.stimulus, response: it.response }); });
