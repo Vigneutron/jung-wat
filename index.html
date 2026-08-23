@@ -266,7 +266,8 @@ const CONFIG = {
   investigateNext: false,    // Jung's perseveration runs forward; enable to also queue the following word
   stereotypyMin: 3,          // same response to >= this many different stimuli
   patternBreakShare: 0.5,    // PATTERN_BREAK only when the dominant type holds >= this share of responses
-  frameworkLens: true        // experimental stacked Freud/Adler/Jung lens on the results sheet
+  frameworkLens: true,       // experimental stacked Freud/Adler/Jung lens on the results sheet
+  fwSemThreshold: 0.50       // min anchor-phrase cosine for a semantic framework hit (uncalibrated dial)
 };
 
 /* ---------------- Lexical knowledge for the rule classifier ----------------
@@ -759,14 +760,58 @@ const FW = {
   freudThemes: ['sexuality','need','body','family_love'],
   adler: ['better','best','worse','worst','superior','inferior','strong','stronger','strongest','weak','weakness','power','powerful','powerless','win','winner','winning','lose','loser','losing','fail','failure','success','successful','boss','leader','servant','slave','rich','richer','poor','poorer','status','rank','famous','fame','respect','respected','admire','admired','envy','envious','jealous','jealousy','shame','ashamed','embarrassed','embarrassment','humiliated','humiliation','proud','pride','prestige','impress','impressive','compete','competition','dominant','dominate','submissive','obey'],
   adlerThemes: ['money','judgement'],
-  jung: ['god','gods','goddess','divine','holy','sacred','heaven','hell','devil','satan','angel','demon','soul','spirit','spiritual','eternal','eternity','everlasting','infinite','infinity','cosmic','cosmos','universe','universal','destiny','fate','prophecy','prophet','messiah','saviour','savior','salvation','redemption','enlightenment','enlightened','awakening','transcendence','transcendent','absolute','ultimate','supreme','almighty','immortal','immortality','glory','glorious','righteous','righteousness','perfection','utopia','revolution','ideology','worship','chosen']
+  jung: ['god','gods','goddess','divine','holy','sacred','heaven','hell','devil','satan','angel','demon','soul','spirit','spiritual','eternal','eternity','everlasting','infinite','infinity','cosmic','cosmos','universe','universal','destiny','fate','prophecy','prophet','messiah','saviour','savior','salvation','redemption','enlightenment','enlightened','awakening','transcendence','transcendent','absolute','ultimate','supreme','almighty','immortal','immortality','glory','glorious','righteous','righteousness','perfection','utopia','revolution','ideology','worship','chosen'],
+  // anchor phrases for the semantic tier: a response is a hit when its embedding sits
+  // within CONFIG.fwSemThreshold cosine of any anchor (same 0..1 scale as relatedness)
+  anchors: {
+    freud: ['sexual desire','forbidden urge','bodily craving','guilt and shame','my mother','my father','childhood memory','repressed feeling','hunger and appetite','punishment'],
+    adler: ['feeling inferior','proving superiority','social status','winning and losing','being admired','fear of humiliation','power over others','competition and rivalry','impressing people','being looked down on'],
+    jung: ['divine mission','absolute truth','spiritual transcendence','cosmic destiny','religious devotion','sacred and holy','ideological conviction','ultimate salvation','eternal glory','higher purpose']
+  }
 };
-function frameworkLens(items) {
+/* Semantic tier: cosine of each unique response against every anchor phrase, through
+   whichever scorer is active. On-device: two batched embedding calls (anchors, texts),
+   cosined here. Backend: one batched /api/score POST of (anchor, response) pairs.
+   Returns null when no real scorer is available - the keyword tier then stands alone. */
+async function fwSemantic(items) {
+  const texts = [...new Set(items.filter(x => x.response).map(x => norm(x.response)))];
+  if (!texts.length) return null;
+  const anchors = ['freud', 'adler', 'jung'].flatMap(k => FW.anchors[k].map(a => ({ layer: k, a })));
+  const simsByText = {};
+  try {
+    if (S.backend) {
+      const pairs = [];
+      texts.forEach(t => anchors.forEach(x => pairs.push({ stimulus: x.a, response: t })));
+      const res = await fetch(S.backend + '/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pairs }) });
+      if (!res.ok) return null;
+      const d = await res.json();
+      texts.forEach((t, i) => { simsByText[t] = d.scores.slice(i * anchors.length, (i + 1) * anchors.length); });
+      return { anchors, simsByText, tier: d.scorer };
+    }
+    if (S.useLocal && !Local.failed && await Local.load()) {
+      const av = (await Local.pipe(anchors.map(x => x.a), { pooling: 'mean', normalize: true })).tolist();
+      const tv = (await Local.pipe(texts, { pooling: 'mean', normalize: true })).tolist();
+      texts.forEach((t, i) => {
+        simsByText[t] = av.map(a => { let d = 0; for (let k = 0; k < a.length; k++) d += a[k] * tv[i][k]; return Math.max(0, Math.min(1, d)); });
+      });
+      return { anchors, simsByText, tier: LOCAL_NAME };
+    }
+  } catch (e) { /* keyword tier stands alone */ }
+  return null;
+}
+function frameworkLens(items, sem) {
   const layers = { freud: [], adler: [], jung: [] };
   items.forEach(it => {
     const r = norm(it.response || '');
     const words = r ? r.split(' ') : [];
     const hit = list => words.find(w => list.includes(w));
+    const sims = sem && r ? sem.simsByText[r] : null;
+    const near = layer => {
+      if (!sims) return null;
+      let best = null;
+      sem.anchors.forEach((x, j) => { if (x.layer === layer && sims[j] >= CONFIG.fwSemThreshold && (!best || sims[j] > best.s)) best = { a: x.a, s: sims[j] }; });
+      return best;
+    };
     // a plain stock/table answer only carries content weight if the item is also disturbed
     const contentOk = it.disturbed || !(it.assoc && it.assoc.subtype === 'stock');
     const ev = { freud: [], adler: [], jung: [] };
@@ -779,6 +824,10 @@ function frameworkLens(items) {
     if (it.disturbed && FW.adlerThemes.includes(it.theme)) ev.adler.push('disturbed on ' + (THEMES[it.theme] || it.theme) + ' stimulus');
     const jw = hit(FW.jung);
     if (jw && contentOk) ev.jung.push('inflated/ideological word "' + jw + '"');
+    if (contentOk) ['freud', 'adler', 'jung'].forEach(k => {
+      const b = near(k);
+      if (b) ev[k].push('semantically near "' + b.a + '" (' + b.s.toFixed(2) + ')');
+    });
     const direct = { freud: ev.freud.length > 0, adler: ev.adler.length > 0, jung: ev.jung.length > 0 };
     if (!direct.freud && !direct.adler && !direct.jung) { it.framework = null; return; }
     const fw = {
@@ -794,7 +843,7 @@ function frameworkLens(items) {
   });
   return layers;
 }
-function renderFrameworkLens(layers) {
+function renderFrameworkLens(layers, tier) {
   const meta = [
     ['jung', 'Jung — ego inflation', 'lofty, ideological, spiritual or political absolutes'],
     ['adler', 'Adler — social compensation', 'inferiority/superiority, posturing, status'],
@@ -814,7 +863,9 @@ function renderFrameworkLens(layers) {
   }).join('');
   $('fwlens').innerHTML = '<div class="eyebrow" style="margin-top:24px">Framework lens (experimental)</div>' +
     '<table class="themes"><thead><tr><th>Layer (Jung on top, Freud at the base)</th><th>Direct</th><th>With implied</th></tr></thead><tbody>' + rows + '</tbody></table>' + lists +
-    '<p class="legend">An interpretive overlay, not a finding. Keyword and theme heuristics sort charged material into three stacked layers — Freud at the base (instinct, parental patterns), Adler above it (social compensation), Jung on top (ego inflation) — and a direct hit on a higher layer implies the layers beneath it. Common stock associations (child → mother, to pray → god) count only when the response is also disturbed. Read these as prompts for the follow-up interview, not verdicts.</p>';
+    '<p class="legend">An interpretive overlay, not a finding. Keyword and theme heuristics sort charged material into three stacked layers — Freud at the base (instinct, parental patterns), Adler above it (social compensation), Jung on top (ego inflation) — and a direct hit on a higher layer implies the layers beneath it. Common stock associations (child → mother, to pray → god) count only when the response is also disturbed. ' +
+    (tier ? 'Semantic matching against anchor phrases ran on ' + tier + ' (cosine ≥ ' + CONFIG.fwSemThreshold.toFixed(2) + ').' : 'No scorer was available, so only exact keyword matching ran.') +
+    ' Read these as prompts for the follow-up interview, not verdicts.</p>';
 }
 
 /* ---------------- Import a saved session straight into analysis ----------------
@@ -916,9 +967,10 @@ async function finish() {
   // framework lens (Layer 5)
   let fwSummary = null;
   if (CONFIG.frameworkLens) {
-    const FWL = frameworkLens(S.items);
-    renderFrameworkLens(FWL);
-    fwSummary = {};
+    const sem = await fwSemantic(S.items);
+    const FWL = frameworkLens(S.items, sem);
+    renderFrameworkLens(FWL, sem ? sem.tier : null);
+    fwSummary = { semanticTier: sem ? sem.tier : null };
     ['freud', 'adler', 'jung'].forEach(k => { fwSummary[k] = { direct: FWL[k].filter(x => x.source === 'direct').length, withImplied: FWL[k].length }; });
   } else { $('fwlens').innerHTML = ''; S.items.forEach(it => { it.framework = null; }); }
 
