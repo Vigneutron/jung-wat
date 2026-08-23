@@ -286,7 +286,9 @@ const CONFIG = {
   stereotypyMin: 3,          // same response to >= this many different stimuli
   patternBreakShare: 0.5,    // PATTERN_BREAK only when the dominant type holds >= this share of responses
   frameworkLens: true,       // experimental stacked Freud/Adler/Jung lens on the results sheet
-  fwSemThreshold: 0.50       // min anchor-phrase cosine for a semantic framework hit (uncalibrated dial)
+  fwSemThreshold: 0.50,      // min anchor-phrase cosine for a semantic framework hit (uncalibrated dial)
+  shortRtRatio: 0.4,         // context flag: answer at or under this fraction of the median (a snap answer can be a guard)
+  symbolicMaxRelatedness: 0.30 // poem test ceiling: below this, a non-table single-word answer is a leap, not a category
 };
 
 /* ---------------- Lexical knowledge for the rule classifier ----------------
@@ -688,6 +690,10 @@ async function classifyLLM(items) {
   } catch (e) { /* rule tier stands */ }
 }
 
+/* Context flags observe without accusing: they never make an item disturbed and are
+   excluded from indicatorCount, but they count toward signal convergence. */
+const CONTEXT_FLAG = f => f.startsWith('INVESTIGATE') || f === 'SYMBOLIC' || f === 'SHORT_RT';
+
 /* ---------------- Layer 3 + 4: flags and session profile ---------------- */
 function analyse(items) {
   const rts = items.map(x => x.reactionMs).filter(x => x !== null).sort((a, b) => a - b);
@@ -716,6 +722,14 @@ function analyse(items) {
       const semantic = it.relatednessPrev !== null && it.relatedness !== null && it.relatednessPrev > it.relatedness + 0.2 && it.relatednessPrev > 0.35;
       if (lexical || semantic) it.flags.push('PERSEVERATION');
     }
+    if (it.reactionMs !== null && it.rtRatio !== null && it.rtRatio <= CONFIG.shortRtRatio) it.flags.push('SHORT_RT');
+    // SYMBOLIC (context flag), the poem test: the pairing works in a poem or a dream but not
+    // in a dictionary entry. Operationalised: a one- or two-word answer with no table, sound,
+    // or category link (nothing the hard rules could place) whose real-scorer relatedness sits
+    // below the leap ceiling - too far for a shared category, close enough to be reachable.
+    if (it.response && r.split(' ').length <= 2 && it.assoc && it.assoc.source !== 'rule' && it.assoc.type !== 'clang' &&
+        it.scorer && it.scorer !== 'lexical-heuristic' && it.relatedness !== null && it.relatedness < CONFIG.symbolicMaxRelatedness)
+      it.flags.push('SYMBOLIC');
   });
 
   // subject profile: type shares and Jung's reaction type
@@ -746,7 +760,7 @@ function analyse(items) {
   items.forEach(it => {
     const other = it.flags.filter(f => HOT.has(f)).length;
     it.disturbed = other > 0 || (it.rtRatio !== null && it.rtRatio >= 2) || (it.flags.includes('LONG_RT') && it.flags.length > 1);
-    it.indicatorCount = it.flags.filter(f => !f.startsWith('INVESTIGATE')).length;
+    it.indicatorCount = it.flags.filter(f => !CONTEXT_FLAG(f)).length;
   });
   items.forEach((it, k) => {
     if (!it.disturbed) return;
@@ -877,7 +891,9 @@ const PLAIN = {
     EGOCENTRIC: () => 'the answer turned personal — the word stopped being a word and became about you',
     STEREOTYPY: () => 'you reached for the same answer you used elsewhere in the run, a safe word to stand behind',
     PERSEVERATION: it => 'this answer was still under the spell of the word before — the feeling carried over instead of clearing',
-    PATTERN_BREAK: () => 'the answer broke the style you kept everywhere else in the run'
+    PATTERN_BREAK: () => 'the answer broke the style you kept everywhere else in the run',
+    SHORT_RT: () => 'you answered markedly faster than your own baseline — a snap answer can be a guard as easily as ease',
+    SYMBOLIC: () => 'the pairing works in a poem or a dream, but not in a dictionary entry — the link needs a leap rather than a shared category, and Jung treated such leaps as a complex speaking in its own images'
   },
   themes: {
     death_illness: 'Jung placed words of death and sickness in the list deliberately: grief and fear of loss anchor some of the most common complexes, and they keep working long after we think we have filed them away',
@@ -917,26 +933,31 @@ function buildInsights(items, A) {
   const answered = items.filter(x => x.response), disturbed = items.filter(x => x.disturbed);
   let h = '';
   h += '<p>You answered ' + answered.length + ' of ' + items.length + ' words with the first thing that came to mind. Jung\'s idea, from a century of use, is simple: the answers themselves matter less than the <b>hesitations</b> around them. Where an answer is slow, blank, oddly distant, or personal, something emotionally charged — he called it a <b>complex</b> — has briefly taken the wheel.</p>';
+  h += '<p><b>What this page will not do:</b> it will not tell you a complex exists. No signal here proves anything — over-reading meaning into ordinary answers is the classic mistake with this test. What it does is flag places where <b>several independent kinds of signal converge</b>, show its reasoning for each, and leave the interpreting to you or to someone trained. Jung used this instrument the same way: to generate hypotheses worth checking, never verdicts.</p>';
   h += '<p>Your typical answer came in <b>' + (A.median ? secs(A.median) + ' seconds' : '—') + '</b>. Measured against your own tempo, <b>' + disturbed.length + '</b> answer' + (disturbed.length === 1 ? '' : 's') + ' stood out.</p>';
   h += '<p>' + (PLAIN.rtype[A.reactionType] || '') + '</p>';
 
   if (!disturbed.length) {
     h += '<div class="insight calm"><h3>A quiet protocol</h3><p class="observed">Nothing in this run rose meaningfully above your own baseline. Jung would not conclude "no complexes" — he would conclude the list did not reach them today, or that the setting kept things calm. A re-run on another day, or the reproduction test, is the classical next step.</p></div>';
   } else {
-    h += '<div class="eyebrow" style="margin-top:22px">The moments worth your attention</div>';
-    const notable = [...disturbed].sort((a, b) => (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0))).slice(0, 6);
+    h += '<div class="eyebrow" style="margin-top:22px">Convergences worth a closer look</div>';
+    const notable = [...disturbed].sort((a, b) => ((b.convergence || 0) - (a.convergence || 0)) || (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0))).slice(0, 6);
     notable.forEach(it => {
       const obs = it.flags.filter(f => PLAIN.flags[f]).map(f => PLAIN.flags[f](it));
       h += '<div class="insight"><h3>&ldquo;' + esc(it.stimulus) + '&rdquo; &rarr; ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : '<span class="muted">no answer</span>') + '</h3>';
+      const g = it.signalGroups || [];
+      h += '<p class="observed"><b>Why it was flagged:</b> ' + (g.length > 1
+        ? g.length + ' independent kinds of signal converged here (' + g.join(' + ') + ') — the combination Jung required, since any one alone is weak'
+        : 'one kind of signal only (' + (g[0] || 'timing') + '), so hold this one loosely') + '.</p>';
       if (obs.length) h += '<p class="observed"><b>What happened:</b> ' + obs.join('; ') + '.</p>';
       let why = PLAIN.themes[it.theme] || PLAIN.themeNeutral;
       if (it.relatedness !== null && it.relatedness < 0.15 && it.response) why += '. And the answer itself arrived from somewhere else entirely — Jung read distant answers as the complex substituting its own material for the expected one';
-      h += '<p class="maybe"><b>Why this word, perhaps:</b> ' + why + '.</p>';
+      h += '<p class="maybe"><b>One reading of why this word:</b> ' + why + '. None of this is established — it is the direction a Jungian interviewer would probe first.</p>';
       if (it.framework) {
         const direct = ['jung', 'adler', 'freud'].filter(k => it.framework[k] && it.framework[k].source === 'direct');
         if (direct.length) {
           const k = direct[0];
-          h += '<p class="maybe"><b>The lens adds:</b> the answer shows ' + PLAIN.fw[k].line + '. <span class="muted">(' + esc(it.framework[k].evidence.join('; ')) + ')</span></p>';
+          h += '<p class="maybe"><b>The lens adds:</b> the answer\'s language leans toward ' + PLAIN.fw[k].line + '.' + (it.framework.corroborated === false ? ' This rests on content alone, with nothing else converging on it — the weakest kind of signal; it may be nothing.' : '') + ' <span class="muted">(' + esc(it.framework[k].evidence.join('; ')) + ')</span></p>';
         }
       }
       h += '<p class="ask">Worth sitting with: what does ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : 'the silence') + ' belong to in your own life, that &ldquo;' + esc(it.stimulus) + '&rdquo; could reach it?</p></div>';
@@ -950,8 +971,27 @@ function buildInsights(items, A) {
       });
     }
   }
-  h += '<p class="legend" style="margin-top:22px"><b>Read this the way Jung would have.</b> Everything above the questions is measurement; the rest is educated speculation, generated by fixed rules from your reaction times and word choices — no judgement of you has been made by anyone or anything. Jung never trusted the sheet alone: he asked the person. The questions in italics are yours to answer, and this page is a starting point for reflection, not a diagnosis of any kind.</p>';
+  h += '<p class="legend" style="margin-top:22px"><b>Read this the way Jung would have.</b> Everything under &ldquo;why it was flagged&rdquo; and &ldquo;what happened&rdquo; is measurement; the rest is speculation generated by fixed rules, shown with its reasoning so you can disagree with it. This page asserts the existence of no complex and diagnoses nothing. If material here lands heavily, the right next step is a conversation with someone trained — a clinician or analyst — for whom these flagged convergences are exactly the kind of starting point Jung intended this instrument to produce.</p>';
   return h;
+}
+
+/* Convergence: Jung read combinations, not single signs. Count how many independent
+   kinds of signal touch an item - timing, form, pattern, content - and mark framework
+   findings that rest on content alone as uncorroborated. */
+function computeConvergence(items) {
+  const KINDS = [
+    ['timing', ['LONG_RT', 'SHORT_RT']],
+    ['form', ['NO_RESPONSE', 'REPEATS_STIMULUS', 'MULTI_WORD']],
+    ['pattern', ['CLANG', 'EGOCENTRIC', 'STEREOTYPY', 'PERSEVERATION', 'PATTERN_BREAK']]
+  ];
+  items.forEach(it => {
+    const g = KINDS.filter(([, fs]) => fs.some(f => it.flags.includes(f))).map(([n]) => n);
+    const fwDirect = it.framework && ['freud', 'adler', 'jung'].some(k => it.framework[k] && it.framework[k].source === 'direct');
+    if (it.flags.includes('SYMBOLIC') || fwDirect) g.push('content');
+    it.signalGroups = g;
+    it.convergence = g.length;
+    if (it.framework) it.framework.corroborated = g.some(x => x !== 'content');
+  });
 }
 
 function renderFrameworkLens(layers, tier) {
@@ -969,7 +1009,7 @@ function renderFrameworkLens(layers, tier) {
     const direct = layers[k].filter(x => x.source === 'direct');
     if (!direct.length) return '';
     return '<p class="legend" style="margin:6px 0 0"><b>' + label.split(' — ')[0] + ':</b> ' +
-      direct.slice(0, 10).map(x => x.it.stimulus + ' → ' + (x.it.response || '—') + ' <span class="muted">(' + x.evidence.join('; ') + ')</span>').join(' · ') +
+      direct.slice(0, 10).map(x => x.it.stimulus + ' → ' + (x.it.response || '—') + ' <span class="muted">(' + x.evidence.join('; ') + (x.it.framework && x.it.framework.corroborated === false ? '; content-only, uncorroborated' : '') + ')</span>').join(' · ') +
       (direct.length > 10 ? ' <span class="muted">+' + (direct.length - 10) + ' more</span>' : '') + '</p>';
   }).join('');
   $('fwlens').innerHTML = '<div class="eyebrow" style="margin-top:24px">Framework lens (experimental)</div>' +
@@ -1054,7 +1094,7 @@ async function finish() {
   S.items.forEach(it => { it.assoc = classifyRule(it); });
   await classifyLLM(S.items);
   const A = analyse(S.items);
-  const HARD = f => !f.startsWith('INVESTIGATE');
+  const HARD = f => !CONTEXT_FLAG(f);
   const flagged = S.items.filter(x => x.disturbed);
   const scorer = (S.items.find(x => x.scorer) || {}).scorer || '—';
   const classifier = (S.items.find(x => x.assoc && !x.assoc.source.startsWith('rule')) || { assoc: { source: 'rules only' } }).assoc.source;
@@ -1080,17 +1120,18 @@ async function finish() {
   if (CONFIG.frameworkLens) {
     const sem = await fwSemantic(S.items);
     const FWL = frameworkLens(S.items, sem);
+    computeConvergence(S.items);
     renderFrameworkLens(FWL, sem ? sem.tier : null);
     fwSummary = { semanticTier: sem ? sem.tier : null };
-    ['freud', 'adler', 'jung'].forEach(k => { fwSummary[k] = { direct: FWL[k].filter(x => x.source === 'direct').length, withImplied: FWL[k].length }; });
-  } else { $('fwlens').innerHTML = ''; S.items.forEach(it => { it.framework = null; }); }
+    ['freud', 'adler', 'jung'].forEach(k => { fwSummary[k] = { direct: FWL[k].filter(x => x.source === 'direct').length, corroborated: FWL[k].filter(x => x.source === 'direct' && x.it.framework.corroborated).length, withImplied: FWL[k].length }; });
+  } else { $('fwlens').innerHTML = ''; S.items.forEach(it => { it.framework = null; }); computeConvergence(S.items); }
 
   // ledger
   const tb = $('ledger'); tb.innerHTML = '';
   S.items.forEach(it => {
     const tr = document.createElement('tr');
     const hard = it.flags.filter(HARD), ctx = it.flags.filter(f => !HARD(f));
-    if (it.disturbed) tr.className = 'flagged'; else if (hard.length) tr.className = 'marked'; if (ctx.length) tr.classList.add('investigate');
+    if (it.disturbed) tr.className = 'flagged'; else if (hard.length) tr.className = 'marked'; if (it.flags.some(f => f.startsWith('INVESTIGATE'))) tr.classList.add('investigate');
     const a = it.assoc || {};
     const typeTag = it.response ? `<span class="tag type">${TYPE_LABEL[a.type] || '?'}${a.subtype ? ' · ' + a.subtype : ''}</span>` : '';
     const tags = [typeTag, ...hard.map(f => `<span class="tag">${f.replace(/_/g, ' ')}</span>`), ...ctx.map(f => `<span class="tag ctx">${f.replace(/_/g, ' ')}</span>`)].join('');
