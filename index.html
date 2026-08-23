@@ -241,7 +241,7 @@
     RT is shown in seconds; the export also carries milliseconds and Jung's fifths of a second.
   </p>
   <div class="actions">
-    <button id="toinsights">Plain-language summary</button>
+    <button id="toinsights">Read the analysis</button>
     <button class="secondary" id="export">Export JSON</button>
     <button class="secondary" id="again">New session</button>
   </div>
@@ -249,8 +249,8 @@
 
 <!-- ================= INSIGHTS ================= -->
 <section id="insights" class="hide">
-  <div class="eyebrow">Summary &amp; insights</div>
-  <h1>What this run suggests</h1>
+  <div class="eyebrow">Analysis</div>
+  <h1>A reading of your associations</h1>
   <div id="insightbody"></div>
   <div class="actions">
     <button class="secondary" id="backsheet">Back to the protocol sheet</button>
@@ -876,102 +876,144 @@ function frameworkLens(items, sem) {
   });
   return layers;
 }
-/* ---------------- Plain-language summary & insights ----------------
-   Deterministic template prose over the computed signals: observations first
-   (what measurably happened), then speculation in Jung's manner - clearly
-   hedged, framed as questions, never verdicts. No model generates this text;
-   every sentence is chosen by the same rules the protocol sheet shows. */
+/* ---------------- Analysis: an in-depth reading ----------------
+   Deterministic template prose over the computed signals, written in a committed
+   analyst's voice (owner's direction, 2026-08-23): the page delivers a reading, not
+   a hedge. Convergence still governs the language - multi-signal findings are read
+   as central, single-signal ones as fainter traces - and the closing note states
+   plainly that the reading is rule-generated speculation, not a clinical evaluation. */
 const PLAIN = {
   flags: {
     LONG_RT: it => 'you took ' + (it.rtRatio ? it.rtRatio.toFixed(1) + '×' : 'well over') + ' your usual time to answer',
-    NO_RESPONSE: () => 'no answer came at all — Jung ranked a complete failure among the strongest signs that something charged was touched',
-    REPEATS_STIMULUS: () => 'you echoed the word itself back, which usually buys time while something else is held down',
-    MULTI_WORD: () => 'a whole phrase came out instead of a single word — the reply arrived with an explanation attached, which Jung read as the mind defending itself',
-    CLANG: () => 'the answer connected by sound rather than meaning — a slide into rhyme or echo often happens exactly where meaning is unwelcome',
+    NO_RESPONSE: () => 'no answer came at all — the strongest indicator Jung knew',
+    REPEATS_STIMULUS: () => 'you echoed the word itself back, buying time while something else was held down',
+    MULTI_WORD: () => 'a whole phrase came out instead of one word — the reply arrived wrapped in explanation',
+    CLANG: () => 'the answer connected by sound rather than meaning',
     EGOCENTRIC: () => 'the answer turned personal — the word stopped being a word and became about you',
-    STEREOTYPY: () => 'you reached for the same answer you used elsewhere in the run, a safe word to stand behind',
-    PERSEVERATION: it => 'this answer was still under the spell of the word before — the feeling carried over instead of clearing',
-    PATTERN_BREAK: () => 'the answer broke the style you kept everywhere else in the run',
-    SHORT_RT: () => 'you answered markedly faster than your own baseline — a snap answer can be a guard as easily as ease',
-    SYMBOLIC: () => 'the pairing works in a poem or a dream, but not in a dictionary entry — the link needs a leap rather than a shared category, and Jung treated such leaps as a complex speaking in its own images'
+    STEREOTYPY: () => 'you reached for the same answer you used elsewhere in the run',
+    PERSEVERATION: it => 'the answer was still under the spell of the word before — the feeling carried over instead of clearing',
+    PATTERN_BREAK: () => 'the answer broke the style you kept everywhere else',
+    SHORT_RT: () => 'you answered markedly faster than your own baseline — the snap of a prepared guard',
+    SYMBOLIC: () => 'the pairing works in a poem or a dream but not in a dictionary — the psyche answered in its own image'
   },
   themes: {
-    death_illness: 'Jung placed words of death and sickness in the list deliberately: grief and fear of loss anchor some of the most common complexes, and they keep working long after we think we have filed them away',
-    family_love: 'family, marriage and intimacy are where our earliest patterns live; Jung expected the list\'s family words to sound the oldest chords',
-    money: 'money words probe security and self-worth — what we have, what we owe, what we are owed',
-    morality: 'words of conscience — sin, justice, the lie — press on the gap between the person we present and the person we fear we are',
-    aggression: 'anger words test what we do with our own force: spend it, swallow it, or turn it inward',
-    pain_fear: 'fear and pain words go straight at whatever we brace against',
-    affection: 'words of friendship and tenderness probe where warmth is easy and where it has been disappointed',
+    death_illness: 'Jung placed death and sickness in the list because grief and the fear of loss anchor the commonest complexes, and they keep working long after we think we have filed them away',
+    family_love: 'family, marriage and intimacy are where the earliest patterns live; these words sound the oldest chords in a person',
+    money: 'money words probe security and self-worth — what you have, what you owe, what you believe you are owed',
+    morality: 'words of conscience press on the gap between the person presented and the person feared',
+    aggression: 'anger words test what you do with your own force: spend it, swallow it, or turn it inward',
+    pain_fear: 'fear and pain words go straight at whatever you brace against',
+    affection: 'words of warmth probe where tenderness is easy and where it has been disappointed',
     separation: 'parting words touch every goodbye that never quite finished',
     mood: 'mood words invite the feeling that is usually kept off-stage',
-    judgement: 'words about being judged — foolish, nice — probe how much the eyes of others weigh',
+    judgement: 'words about being judged probe how much the eyes of others weigh on you',
     need: 'hunger and need words reach the places where wanting itself feels dangerous',
-    sexuality: 'the explicit words in this list are there by clinical design: no theme is more often defended',
-    care: 'duty and care words weigh what we carry for others, willingly or not',
+    sexuality: 'the explicit words are in the list by clinical design: no territory is more defended',
+    care: 'duty and care words weigh what you carry for others, willingly or not',
     decision: 'choosing words press on the fear of the wrong life',
     fortune: 'luck words ask whether the world has felt like a friend or an opponent',
     age: 'age words touch time, and what it has taken or threatens to take',
-    body: 'body words live close to the instincts and to whatever we would rather not feel physically'
+    body: 'body words live close to the instincts and to what you would rather not feel physically'
   },
-  themeNeutral: 'this is one of the list\'s everyday words — which makes a stumble here more telling, not less: the charge cannot come from the word\'s dictionary meaning, so it likely comes from a private association only you can name',
+  themeNeutral: 'an everyday word, which sharpens the finding: the charge cannot come from the dictionary, so it comes from a private association — something this word touches in your history alone',
   rtype: {
-    objective: 'Overall you answered the way Jung called <b>objective</b>: plainly, to the word itself, without much interference. Whatever stood out did so against a calm background — which makes the exceptions below easier to trust.',
-    egocentric: 'A notable share of your answers turned back toward yourself — Jung called this an <b>egocentric</b> reaction type. The words kept becoming mirrors. That is not a fault; it suggests the material of this run sits close to the skin.',
-    predicate: 'You often answered with judgements and qualities rather than plain associations — Jung\'s <b>predicate type</b>. He noticed this style in people holding strong feeling just off-stage: the evaluation stands where the emotion would be.',
-    definition: 'You often answered by defining the word, as if sitting an exam — Jung\'s <b>definition type</b>. He read it as a wish to perform correctly rather than reveal; worth asking what an incorrect answer would have risked.',
-    superficial: 'Many answers ran on habit and sound — Jung\'s <b>superficial</b> type. He saw it in fatigue, distraction, and also in defence: staying on the surface is one way of not going below it.'
+    objective: 'You meet the world matter-of-factly: word came, answer went, little interference. A psyche this orderly does not stumble by accident — which is precisely why the places it faltered carry weight.',
+    egocentric: 'Your associations bend back toward yourself; the words kept becoming mirrors. The material of this run lives close to the skin, and the ego stands in the doorway of nearly every answer.',
+    predicate: 'You answer with judgements where associations would do — good, terrible, lovely. Jung read this style as feeling under pressure: the emotion is present but displaced into evaluation, the verdict standing where the affect is not allowed to speak.',
+    definition: 'You answered like a person sitting an examination, defining rather than associating. To define a word is to hold it at arm\'s length; the style guards against exposure, and the question is what would have surfaced had the guard come down.',
+    superficial: 'Your answers ran on habit and sound. Surface-holding this consistent is itself a statement: the depth is defended — by fatigue, by distraction, or by an unwillingness to let this list go below.'
   },
   fw: {
-    freud: { name: 'the instinct layer (Freud)', line: 'material around instinct, appetite, or the parents — in Freud\'s reading, the base layer, where early patterns and unwelcome urges live' },
-    adler: { name: 'the social layer (Adler)', line: 'comparison and status language — in Adler\'s reading, a felt inferiority dressing itself as position, and usually concealing the instinct layer beneath' },
-    jung: { name: 'the inflation layer (Jung)', line: 'lofty, absolute, or ideological material — in Jung\'s reading, the ego borrowing size from something larger, with the social and instinct layers presumed underneath' }
+    freud: 'the instinct layer — Freud\'s territory: appetite, the forbidden, the parents; the base of the stack, where the earliest patterns were laid down',
+    adler: 'the compensation layer — Adler\'s territory: rank, comparison, the fear of being less; social posturing that conceals the instinct beneath it',
+    jung: 'the inflation layer — Jung\'s territory: the absolute, the sacred, the ideological; the ego borrowing size from something larger than itself'
   }
 };
 function esc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function buildInsights(items, A) {
   const answered = items.filter(x => x.response), disturbed = items.filter(x => x.disturbed);
+  const signalled = items.filter(x => (x.convergence || 0) > 0);
   let h = '';
-  h += '<p>You answered ' + answered.length + ' of ' + items.length + ' words with the first thing that came to mind. Jung\'s idea, from a century of use, is simple: the answers themselves matter less than the <b>hesitations</b> around them. Where an answer is slow, blank, oddly distant, or personal, something emotionally charged — he called it a <b>complex</b> — has briefly taken the wheel.</p>';
-  h += '<p><b>What this page will not do:</b> it will not tell you a complex exists. No signal here proves anything — over-reading meaning into ordinary answers is the classic mistake with this test. What it does is flag places where <b>several independent kinds of signal converge</b>, show its reasoning for each, and leave the interpreting to you or to someone trained. Jung used this instrument the same way: to generate hypotheses worth checking, never verdicts.</p>';
-  h += '<p>Your typical answer came in <b>' + (A.median ? secs(A.median) + ' seconds' : '—') + '</b>. Measured against your own tempo, <b>' + disturbed.length + '</b> answer' + (disturbed.length === 1 ? '' : 's') + ' stood out.</p>';
-  h += '<p>' + (PLAIN.rtype[A.reactionType] || '') + '</p>';
 
-  if (!disturbed.length) {
-    h += '<div class="insight calm"><h3>A quiet protocol</h3><p class="observed">Nothing in this run rose meaningfully above your own baseline. Jung would not conclude "no complexes" — he would conclude the list did not reach them today, or that the setting kept things calm. A re-run on another day, or the reproduction test, is the classical next step.</p></div>';
+  // ---- portrait
+  h += '<div class="eyebrow">The portrait</div>';
+  const rate = answered.length ? disturbed.length / answered.length : 0;
+  let weather;
+  if (rate < 0.08) weather = 'The sheet is quiet on its surface: ' + disturbed.length + ' of ' + answered.length + ' answers broke your baseline. A quiet sheet is not an empty psyche — it is a well-guarded one, and the breaches below did real work to get through.';
+  else if (rate < 0.2) weather = 'A psyche in ordinary weather: most answers ran clean, and a definable set of places did not. Those places are not noise; they map where the charge sits.';
+  else weather = 'The sheet is turbulent: ' + disturbed.length + ' of ' + answered.length + ' answers broke your baseline. Either the day was heavy, or the charged material in this psyche sits near the surface and speaks readily.';
+  h += '<p>' + weather + '</p>';
+  h += '<p>' + (PLAIN.rtype[A.reactionType] || '') + ' Your baseline tempo: <b>' + (A.median ? secs(A.median) + ' seconds' : '—') + '</b> to a word.</p>';
+
+  // ---- the complexes
+  if (!signalled.length) {
+    h += '<div class="insight calm"><h3>Nothing surfaced</h3><p class="observed">No signal of any kind rose above your baseline. Read plainly: either the complexes kept their distance today, or the guard held from the first word to the last — and a guard that complete is itself worth noticing. The classical next step is a re-run on another day, when the watchman is tired.</p></div>';
   } else {
-    h += '<div class="eyebrow" style="margin-top:22px">Convergences worth a closer look</div>';
-    const notable = [...disturbed].sort((a, b) => ((b.convergence || 0) - (a.convergence || 0)) || (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0))).slice(0, 6);
+    h += '<div class="eyebrow" style="margin-top:22px">The complexes at work</div>';
+    const notable = [...signalled].sort((a, b) => ((b.convergence || 0) - (a.convergence || 0)) || (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0))).slice(0, 7);
     notable.forEach(it => {
       const obs = it.flags.filter(f => PLAIN.flags[f]).map(f => PLAIN.flags[f](it));
-      h += '<div class="insight"><h3>&ldquo;' + esc(it.stimulus) + '&rdquo; &rarr; ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : '<span class="muted">no answer</span>') + '</h3>';
       const g = it.signalGroups || [];
-      h += '<p class="observed"><b>Why it was flagged:</b> ' + (g.length > 1
-        ? g.length + ' independent kinds of signal converged here (' + g.join(' + ') + ') — the combination Jung required, since any one alone is weak'
-        : 'one kind of signal only (' + (g[0] || 'timing') + '), so hold this one loosely') + '.</p>';
-      if (obs.length) h += '<p class="observed"><b>What happened:</b> ' + obs.join('; ') + '.</p>';
+      h += '<div class="insight"><h3>&ldquo;' + esc(it.stimulus) + '&rdquo; &rarr; ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : '<span class="muted">no answer</span>') + '</h3>';
+      h += '<p class="observed"><b>The record:</b> ' + (obs.length ? obs.join('; ') : 'the signal is in the content alone') + '. ' +
+        (g.length > 1 ? '<b>' + g.length + ' kinds of signal converge here (' + g.join(' + ') + ') — this is where the run points hardest.</b>'
+                      : 'A single signal (' + (g[0] || 'timing') + ') — a fainter trace: the complex brushed this word rather than seizing it.') + '</p>';
       let why = PLAIN.themes[it.theme] || PLAIN.themeNeutral;
-      if (it.relatedness !== null && it.relatedness < 0.15 && it.response) why += '. And the answer itself arrived from somewhere else entirely — Jung read distant answers as the complex substituting its own material for the expected one';
-      h += '<p class="maybe"><b>One reading of why this word:</b> ' + why + '. None of this is established — it is the direction a Jungian interviewer would probe first.</p>';
+      if (it.relatedness !== null && it.relatedness < 0.15 && it.response) why += '. The answer itself arrived from somewhere else entirely — the complex substituting its own material for the expected word';
+      h += '<p class="maybe"><b>The reading:</b> Something answered here that was not merely the dictionary. ' + why + '.</p>';
       if (it.framework) {
         const direct = ['jung', 'adler', 'freud'].filter(k => it.framework[k] && it.framework[k].source === 'direct');
         if (direct.length) {
           const k = direct[0];
-          h += '<p class="maybe"><b>The lens adds:</b> the answer\'s language leans toward ' + PLAIN.fw[k].line + '.' + (it.framework.corroborated === false ? ' This rests on content alone, with nothing else converging on it — the weakest kind of signal; it may be nothing.' : '') + ' <span class="muted">(' + esc(it.framework[k].evidence.join('; ')) + ')</span></p>';
+          const below = { jung: 'and where inflation stands, compensation and instinct stand beneath it', adler: 'and where compensation stands, instinct stands beneath it', freud: '' }[k];
+          h += '<p class="maybe"><b>Its layer:</b> the language of this answer carries ' + PLAIN.fw[k] + (below ? ' — ' + below : '') + '.' +
+            (it.framework.corroborated === false ? ' The trace is content-only, the faintest kind — an ember rather than a fire.' : '') +
+            ' <span class="muted">(' + esc(it.framework[k].evidence.join('; ')) + ')</span></p>';
         }
       }
-      h += '<p class="ask">Worth sitting with: what does ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : 'the silence') + ' belong to in your own life, that &ldquo;' + esc(it.stimulus) + '&rdquo; could reach it?</p></div>';
+      h += '<p class="ask">The question the analyst would put to you: what does ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : 'the silence') + ' hold, that &ldquo;' + esc(it.stimulus) + '&rdquo; could reach it?</p></div>';
     });
 
+    // ---- constellations
     const constellations = A.themes.filter(t => t.disturbed >= 2 && t.disturbed / t.total >= 0.5);
     if (constellations.length) {
-      h += '<div class="eyebrow" style="margin-top:22px">Where the stumbles cluster</div>';
+      h += '<div class="eyebrow" style="margin-top:22px">The constellation' + (constellations.length > 1 ? 's' : '') + '</div>';
       constellations.forEach(t => {
-        h += '<div class="insight"><h3>' + esc(t.label) + '</h3><p class="observed">' + t.disturbed + ' of the ' + t.total + ' words in this territory drew a disturbed reaction. Jung called such a grouping a <b>constellation</b> — one charged center pulling several words toward it — and considered it far stronger evidence than any single stumble.</p><p class="maybe">' + (PLAIN.themes[t.theme] || PLAIN.themeNeutral) + '.</p></div>';
+        h += '<div class="insight"><h3>' + esc(t.label) + '</h3><p class="observed">' + t.disturbed + ' of ' + t.total + ' words in this territory drew a disturbed reaction — a grouping Jung called a constellation: one charged centre pulling several words into its orbit. This is the strongest structure a single sitting can show.</p><p class="maybe">' + (PLAIN.themes[t.theme] || PLAIN.themeNeutral) + '. Whatever sits at this centre organises more of the sheet than any single answer — begin here.</p></div>';
       });
     }
+
+    // ---- the stack
+    const ls = {}; ['freud', 'adler', 'jung'].forEach(k => ls[k] = { direct: 0, corroborated: 0, implied: 0 });
+    items.forEach(it => {
+      if (!it.framework) return;
+      ['freud', 'adler', 'jung'].forEach(k => {
+        const e = it.framework[k]; if (!e) return;
+        if (e.source === 'direct') { ls[k].direct++; if (it.framework.corroborated) ls[k].corroborated++; }
+        else ls[k].implied++;
+      });
+    });
+    if (ls.freud.direct + ls.adler.direct + ls.jung.direct > 0) {
+      h += '<div class="eyebrow" style="margin-top:22px">The stack</div><div class="insight">';
+      if (ls.jung.direct) h += '<p class="maybe"><b>Top — inflation:</b> ' + ls.jung.direct + ' answer' + (ls.jung.direct > 1 ? 's' : '') + ' reached for the absolute. Where the ego borrows size, Adler\'s comparing and Freud\'s instinct are at work beneath the robes.</p>';
+      if (ls.adler.direct) h += '<p class="maybe"><b>Middle — compensation:</b> ' + ls.adler.direct + ' answer' + (ls.adler.direct > 1 ? 's' : '') + ' spoke the language of rank and comparison — position defended in words, concealing the instinct it stands on.</p>';
+      if (ls.freud.direct || ls.freud.implied) h += '<p class="maybe"><b>Base — instinct and the parents:</b> ' + (ls.freud.direct ? ls.freud.direct + ' answer' + (ls.freud.direct > 1 ? 's' : '') + ' touched it directly' : 'no answer touched it directly') + (ls.freud.implied ? ', and every layer above implies it — the base is always load-bearing' : '') + '.</p>';
+      h += '</div>';
+    }
+
+    // ---- the defence
+    const tally = f => items.filter(x => x.flags.includes(f)).length;
+    let defence;
+    if (tally('NO_RESPONSE') >= 2) defence = 'refusal: when the material comes too near, the answer simply does not come. The blank is your wall, and it is a thick one';
+    else if (tally('CLANG') >= 2) defence = 'retreat into sound: where meaning is unwelcome, you rhyme your way past it';
+    else if (tally('STEREOTYPY') >= 3) defence = 'the shield-word: one safe answer, produced again and again, standing in front of whatever would otherwise speak';
+    else if (tally('MULTI_WORD') >= 2) defence = 'explanation: the single word gets buried under a sentence, and the sentence is the hiding place';
+    else defence = 'delay: time itself is your buffer — the guarded material announces itself by making you wait';
+    h += '<div class="eyebrow" style="margin-top:22px">The characteristic defence</div><div class="insight"><p class="maybe">Every psyche has a favourite way of not answering. In this run, yours is <b>' + defence + '</b>.</p></div>';
   }
-  h += '<p class="legend" style="margin-top:22px"><b>Read this the way Jung would have.</b> Everything under &ldquo;why it was flagged&rdquo; and &ldquo;what happened&rdquo; is measurement; the rest is speculation generated by fixed rules, shown with its reasoning so you can disagree with it. This page asserts the existence of no complex and diagnoses nothing. If material here lands heavily, the right next step is a conversation with someone trained — a clinician or analyst — for whom these flagged convergences are exactly the kind of starting point Jung intended this instrument to produce.</p>';
+
+  // ---- analyst's note
+  h += '<p class="legend" style="margin-top:22px"><b>Analyst\'s note.</b> This reading was generated by fixed interpretive rules in the Jungian tradition, from your timings and word choices — the record it read from is shown in every card, and the protocol sheet holds the raw measurements. It speaks with conviction because a half-committed analysis is useless; conviction is a style, not proof. Take what resonates, argue with what does not, and know that this is generated speculation for reflection — not a clinical evaluation, which only a trained human can give.</p>';
   return h;
 }
 
