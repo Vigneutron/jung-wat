@@ -111,50 +111,6 @@
   .themes td.hot { color: var(--flag); }
   .legend { font-size: 13px; color: var(--graphite); line-height: 1.6; }
   .note { border-left: 2px solid var(--chrono); padding: 6px 12px; font-size: 13px; color: var(--graphite); margin: 14px 0; }
-  .insight { border-left: 3px solid var(--flag); background: #fff; border-radius: 0 4px 4px 0; padding: 14px 16px; margin: 14px 0; }
-  .insight h3 { font: 600 16px var(--serif); margin: 0 0 6px; }
-  .insight p { font-size: 14px; line-height: 1.65; margin: 8px 0; }
-  .insight .observed { color: var(--ink); }
-  .insight .maybe { color: var(--graphite); }
-  .insight .ask { font-style: italic; color: var(--chrono); }
-  .insight.calm { border-left-color: var(--rule); }
-  #insightbody > p { font-size: 15px; line-height: 1.7; }
-  /* ---- the reading (pop landing). Palette arrives via CSS vars on #reading. */
-  #reading { --rd-bg1:#1a1030; --rd-bg2:#2d1b4e; --rd-accent:#c9a227; --rd-glow:#b388ff; --rd-ink:#f5f0ff;
-    background: linear-gradient(160deg, var(--rd-bg1), var(--rd-bg2)); color: var(--rd-ink);
-    margin: -28px -20px; padding: 40px 22px 30px; min-height: 100vh; }
-  #reading .rd-wrap { max-width: 660px; margin: 0 auto; }
-  .rd-eyebrow { font: 600 11px var(--sans); letter-spacing: .22em; text-transform: uppercase; opacity: .65; }
-  .rd-hero { text-align: center; padding: 10px 0 26px; }
-  .rd-sigil { font-size: 54px; line-height: 1; filter: drop-shadow(0 0 18px var(--rd-glow)); }
-  .rd-name { font: 700 34px/1.15 var(--serif); margin: 14px 0 6px; color: var(--rd-accent); text-shadow: 0 0 24px rgba(0,0,0,.4); }
-  .rd-epithet { font: italic 17px var(--serif); opacity: .9; }
-  .rd-typenum { display: inline-block; margin-top: 12px; padding: 4px 14px; border: 1px solid var(--rd-accent); border-radius: 999px; font: 600 12px var(--sans); letter-spacing: .12em; color: var(--rd-accent); }
-  .rd-portrait { font: 16px/1.7 var(--serif); opacity: .95; margin: 18px 0 6px; }
-  .rd-sec { margin-top: 34px; }
-  .rd-sec h2 { font: 700 20px var(--serif); color: var(--rd-accent); margin: 6px 0 14px; }
-  .rd-bar { margin: 12px 0; }
-  .rd-bar .rd-lab { display: flex; justify-content: space-between; font: 600 13px var(--sans); margin-bottom: 5px; }
-  .rd-bar .rd-lab .rd-state { opacity: .65; font-weight: 400; }
-  .rd-track { height: 12px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
-  .rd-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--rd-accent), var(--rd-glow)); transition: width 1.1s cubic-bezier(.2,.7,.2,1); }
-  .rd-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-  .rd-card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 16px 14px; backdrop-filter: blur(2px); }
-  .rd-card .rd-stim { font: 700 19px var(--serif); color: var(--rd-accent); }
-  .rd-card .rd-resp { font: italic 14px var(--serif); opacity: .85; margin: 3px 0 10px; }
-  .rd-card p { font: 13px/1.6 var(--sans); margin: 0; opacity: .92; }
-  .rd-cast { display: flex; gap: 18px; align-items: flex-start; background: rgba(0,0,0,.22); border-radius: 14px; padding: 18px 16px; }
-  .rd-hex { display: flex; flex-direction: column-reverse; gap: 5px; flex: 0 0 auto; padding-top: 4px; }
-  .rd-line { display: flex; gap: 6px; }
-  .rd-line span { height: 6px; width: 18px; border-radius: 2px; background: var(--rd-accent); box-shadow: 0 0 8px var(--rd-glow); }
-  .rd-line.solid span { width: 42px; }
-  .rd-cast p { font: 15px/1.75 var(--serif); margin: 0; }
-  .rd-castnum { font: 600 11px var(--sans); letter-spacing: .18em; opacity: .6; display: block; margin-bottom: 8px; }
-  .rd-foot { margin-top: 34px; text-align: center; }
-  .rd-foot .rd-note { font: italic 13px var(--serif); opacity: .6; margin-bottom: 16px; }
-  .rd-foot button { background: transparent; border: 1px solid var(--rd-accent); color: var(--rd-accent); margin: 4px; }
-  .rd-foot button.rd-primary { background: var(--rd-accent); color: var(--rd-bg1); border-color: var(--rd-accent); }
-  @media (prefers-reduced-motion: reduce) { .rd-fill { transition: none; } }
   .hide { display: none !important; }
 </style>
 </head>
@@ -186,7 +142,7 @@
     <label class="field">Words to run
       <select id="count"></select>
     </label>
-    <label class="field">Relatedness scorer URL <span class="muted">(pre-filled when this site hosts one; blank = score in the browser)</span>
+    <label class="field">Relatedness scorer URL <span class="muted">(blank = local heuristic)</span>
       <input type="text" id="backend" placeholder="http://localhost:8000" autocomplete="off">
     </label>
   </div>
@@ -208,7 +164,7 @@
     <button class="secondary" id="impgo">Open in analysis</button>
   </div>
   <div id="imperr" class="note hide"></div>
-  <p class="muted" style="margin-top:24px">Responses stay on this page and export as JSON; the app itself sends only word pairs, to the scorer URL above when one is set. In mic mode the browser's own speech recognition transcribes your voice, and Chrome and Safari send that audio to Google or Apple servers — choose typing mode to keep everything on this device. Imported sessions are re-scored against the active scorer.</p>
+  <p class="muted" style="margin-top:24px">Nothing leaves this page except the word pairs sent to the scorer URL you set. Results export as JSON. Imported sessions are re-scored against the scorer URL if one is set.</p>
 </section>
 
 <!-- ================= TEST ================= -->
@@ -251,45 +207,6 @@
   </div>
 </section>
 
-<!-- ================= READING (pop landing) ================= -->
-<section id="reading" class="hide">
-  <div class="rd-wrap">
-    <div class="rd-hero">
-      <div class="rd-sigil" id="rd_sigil"></div>
-      <div class="rd-eyebrow" style="margin-top:16px">Your word-association reading</div>
-      <h1 class="rd-name" id="rd_name"></h1>
-      <div class="rd-epithet" id="rd_epithet"></div>
-      <div class="rd-typenum" id="rd_typenum"></div>
-      <p class="rd-portrait" id="rd_portrait"></p>
-    </div>
-    <div class="rd-sec">
-      <div class="rd-eyebrow">The complexes</div>
-      <h2>What stirred beneath the words</h2>
-      <div id="rd_bars"></div>
-    </div>
-    <div class="rd-sec">
-      <div class="rd-eyebrow">Three cards</div>
-      <h2>The words that found something</h2>
-      <div class="rd-cards" id="rd_cards"></div>
-    </div>
-    <div class="rd-sec">
-      <div class="rd-eyebrow">The casting</div>
-      <h2>Your reading</h2>
-      <div class="rd-cast">
-        <div class="rd-hex" id="rd_hex"></div>
-        <div><span class="rd-castnum" id="rd_castnum"></span><p id="rd_oracle"></p></div>
-      </div>
-    </div>
-    <div class="rd-foot">
-      <div class="rd-note">A reading, not a diagnosis — drawn only from your own words and your own timing.</div>
-      <button class="rd-primary" id="rd_new">Cast again</button>
-      <button id="rd_analysis">The analyst's reading</button>
-      <button id="rd_record">The full record</button>
-      <button id="rd_export">Save my reading</button>
-    </div>
-  </div>
-</section>
-
 <!-- ================= RESULTS ================= -->
 <section id="results" class="hide">
   <div class="eyebrow">Protocol sheet</div>
@@ -302,7 +219,6 @@
   <div class="note" id="scorenote"></div>
   <div id="profile" class="profile"></div>
   <table id="themes" class="themes"></table>
-  <div id="fwlens"></div>
   <div class="eyebrow" style="margin-top:24px">Protocol</div>
   <table>
     <thead><tr><th>#</th><th>Stimulus</th><th>Response</th><th>RT</th><th>×med</th><th>Rel.</th></tr></thead>
@@ -316,20 +232,8 @@
     RT is shown in seconds; the export also carries milliseconds and Jung's fifths of a second.
   </p>
   <div class="actions">
-    <button id="toreading">Back to your reading</button>
-    <button id="toinsights">Read the analysis</button>
-    <button class="secondary" id="export">Export JSON</button>
+    <button id="export">Export JSON</button>
     <button class="secondary" id="again">New session</button>
-  </div>
-</section>
-
-<!-- ================= INSIGHTS ================= -->
-<section id="insights" class="hide">
-  <div class="eyebrow">Analysis</div>
-  <h1>A reading of your associations</h1>
-  <div id="insightbody"></div>
-  <div class="actions">
-    <button class="secondary" id="backsheet">Back to the protocol sheet</button>
   </div>
 </section>
 
@@ -360,13 +264,7 @@ const CONFIG = {
   investigatePrevious: true, // product requirement: queue the word before a disturbed one
   investigateNext: false,    // Jung's perseveration runs forward; enable to also queue the following word
   stereotypyMin: 3,          // same response to >= this many different stimuli
-  patternBreakShare: 0.5,    // PATTERN_BREAK only when the dominant type holds >= this share of responses
-  frameworkLens: true,       // experimental stacked Freud/Adler/Jung lens on the results sheet
-  fwSemThreshold: 0.25,      // min anchor cosine for a semantic hit; single-word responses only - phrase
-                             // responses have a far higher noise floor and are excluded (field data 2026-08-23)
-  shortRtRatio: 0.4,         // context flag: answer at or under this fraction of the median (a snap answer can be a guard)
-  symbolicMaxRelatedness: 0.30, // poem test ceiling: below this, a non-table single-word answer is a leap, not a category
-  patternMinN: 20            // PATTERN_BREAK and similar share-of-run measures need at least this many answers
+  patternBreakShare: 0.5     // PATTERN_BREAK only when the dominant type holds >= this share of responses
 };
 
 /* ---------------- Lexical knowledge for the rule classifier ----------------
@@ -405,15 +303,6 @@ const norm = s => (s || '').toLowerCase().replace(/^to /, '').replace(/[^a-z' ]/
 /* ---------------- Setup ---------------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (!SR) { $('miccap').classList.remove('hide'); $('mode').value = 'type'; }
-
-/* Single-deployment mode: if this page is being served by the scorer backend itself
-   (see Dockerfile), pre-fill the scorer URL with our own origin. Fails silently on
-   file:// and on static hosts, where the on-device model remains the default. */
-if (location.protocol.startsWith('http')) {
-  fetch('/api/health').then(r => r.ok ? r.json() : null)
-    .then(d => { if (d && d.ok && !$('backend').value) $('backend').value = location.origin; })
-    .catch(() => {});
-}
 
 SETS.sets.forEach(x => { const o = document.createElement('option'); o.value = x.id; o.textContent = `${x.label} · ${x.n} words${x.explicit ? ' · explicit' : ''}`; $('set').appendChild(o); });
 function refreshSet() {
@@ -467,20 +356,13 @@ function present() {
 
   if (S.speak && 'speechSynthesis' in window) {
     const u = new SpeechSynthesisUtterance(w); u.rate = 0.95; u.lang = 'en-US';
-    let started = false, armed = false;
-    const trial = S.i;
+    let started = false;
     S.ignoreUntil = Infinity;
-    // arm() is the only exit from the muted state. Normally reached via onend, but iOS
-    // Safari loses utterance events (especially after cancel()), which used to leave
-    // ignoreUntil at Infinity and the mic deaf for the rest of the session. Two
-    // watchdogs guarantee it runs; the trial guard keeps a stale timer from unmuting
-    // during the next word's utterance.
-    const arm = () => { if (armed || S.i !== trial) return; armed = true; S.ignoreUntil = performance.now() + 250; if (!S.t0) { $('word').classList.remove('hidden'); startClock(); } };
     u.onstart = () => { started = true; $('word').classList.remove('hidden'); startClock(); };
-    u.onend = arm; u.onerror = arm;
+    u.onend = () => { S.ignoreUntil = performance.now() + 250; if (!started) { $('word').classList.remove('hidden'); startClock(); } };
+    u.onerror = u.onend;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
-    setTimeout(() => { if (!started) arm(); }, 800);
-    setTimeout(arm, 3000);
+    setTimeout(() => { if (!started && !S.t0) u.onend(); }, 800);
   } else {
     setTimeout(() => { S.ignoreUntil = 0; $('word').classList.remove('hidden'); startClock(); }, 400);
   }
@@ -499,14 +381,12 @@ function startClock() {
 const Mic = (() => {
   let stream = null, ctx = null, analyser = null, buf = null, rec = null, active = false, raf = null;
   let floor = 0, floorSamples = 0;
-  const state = $('micstate'), dot = state.firstChild;
+  const state = $('micstate');
   const setState = (txt, live) => { state.lastChild.textContent = txt; state.classList.toggle('live', !!live); };
   const rms = () => { analyser.getFloatTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i]; return Math.sqrt(s / buf.length); };
   function tick() {
     if (!active) return;
     const level = rms();
-    dot.style.opacity = Math.min(1, 0.35 + level * 25);
-    dot.style.transform = `scale(${1 + Math.min(1.2, level * 30)})`;
     if (floorSamples < 40) { floor = (floor * floorSamples + level) / ++floorSamples; }
     const now = performance.now();
     if (S.t0 && S.firstInputAt === null && now > S.ignoreUntil && level > Math.max(floor * 3, 0.02)) S.firstInputAt = now;
@@ -534,8 +414,6 @@ const Mic = (() => {
     };
     rec.onerror = e => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { setState('mic blocked', false); active = false; S.mode = 'type'; $('micpane').classList.add('hide'); $('typepane').classList.remove('hide'); $('typed').focus(); }
-      else if (e.error === 'audio-capture') setState('recognizer gets no audio', false);
-      else if (e.error === 'network') setState('speech service unreachable', false);
     };
     rec.onend = () => { if (active) setTimeout(startRecognizer, 200); else setState('mic off', false); };
     try { rec.start(); } catch (err) { setTimeout(startRecognizer, 500); }
@@ -639,7 +517,7 @@ $('fix').addEventListener('focus', () => { S.ignoreUntil = Infinity; });      //
 $('fix').addEventListener('blur', () => { S.ignoreUntil = performance.now() + 200; });
 
 
-/* ---------------- On-device scorer: paraphrase-MiniLM-L6-v2 via transformers.js (Apache-2.0) ----------------
+/* ---------------- On-device scorer: all-MiniLM-L6-v2 via transformers.js (Apache-2.0) ----------------
    Used when no scorer URL is set. First run downloads ~23 MB and caches it in the browser. Needs a
    hosted page with network access; inside a chat preview the import is blocked and we fall back to
    the lexical placeholder. Same cosine scale as the Python backend, so thresholds carry over. */
@@ -654,7 +532,7 @@ const Local = {
         st.textContent = 'Loading on-device scorer…';
         const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
         env.allowLocalModels = false;
-        this.pipe = await pipeline('feature-extraction', 'Xenova/paraphrase-MiniLM-L6-v2', {
+        this.pipe = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
           progress_callback: p => { if (p.status === 'progress' && p.file && p.file.endsWith('.onnx')) st.textContent = `Downloading scorer ${Math.round(p.progress || 0)}%`; }
         });
         st.textContent = 'On-device scorer ready.';
@@ -671,7 +549,7 @@ const Local = {
     return scores;
   }
 };
-const LOCAL_NAME = 'paraphrase-MiniLM-L6-v2 (on-device)';
+const LOCAL_NAME = 'all-MiniLM-L6-v2 (on-device)';
 
 /* ---------------- Relatedness scoring (backend MiniLM, on-device MiniLM, or placeholder) ----------------
    Sends two pairs: (stimulus, response) and (previous stimulus, response). The second one detects
@@ -723,12 +601,6 @@ function classifyRule(item) {
   if (r === sBare) return out('remainder', 'repetition');
   const words = r.split(' ');
 
-  // detect phrase-completions on the raw response: norm() strips a leading "to ",
-  // which would hide starters like "to me" (lie -> "to me", brother -> "where art thou")
-  const rawWords = String(item.response || '').trim().toLowerCase().split(/\s+/);
-  if (rawWords.length >= 2 && ['to','with','of','and','or','in','on','for','the','a','art','thou','so','your'].includes(rawWords[0])) {
-    ev.push('continues the stimulus into a phrase'); return out('outer', 'speech-habit');
-  }
   if (/\b(i|me|my|mine|myself|we|our|us)\b/.test(r)) { ev.push('personal pronoun'); return out('egocentric', 'personal'); }
 
   if ((ANTONYMS[stim] || []).includes(r)) { ev.push('antonym'); return out('inner', 'contrast'); }
@@ -750,7 +622,7 @@ function classifyRule(item) {
   if (words.some(w => EVALUATIVE.has(w))) { ev.push('evaluative'); return out('inner', 'predicate'); }
 
   if (item.relatedness !== null && item.scorer !== 'lexical-heuristic') {
-    if (item.relatedness >= 0.42) { ev.push('semantically close'); return out('inner', 'coordination', 'rule-probable'); }  // bench: category pairs 0.44-0.71 on paraphrase-MiniLM-L6-v2
+    if (item.relatedness >= 0.45) { ev.push('semantically close'); return out('inner', 'coordination', 'rule-probable'); }
     if (item.relatedness >= 0.15) { ev.push('loosely related'); return out('outer', 'surface', 'rule-probable'); }
     if (onset) { ev.push('same onset, no meaning link'); return out('clang', 'sound', 'rule-probable'); }
     ev.push('semantically distant'); return out('remainder', 'indirect', 'rule-probable');
@@ -773,10 +645,6 @@ async function classifyLLM(items) {
     });
   } catch (e) { /* rule tier stands */ }
 }
-
-/* Context flags observe without accusing: they never make an item disturbed and are
-   excluded from indicatorCount, but they count toward signal convergence. */
-const CONTEXT_FLAG = f => f.startsWith('INVESTIGATE') || f === 'SYMBOLIC' || f === 'SHORT_RT';
 
 /* ---------------- Layer 3 + 4: flags and session profile ---------------- */
 function analyse(items) {
@@ -803,17 +671,9 @@ function analyse(items) {
     if (prev && prev.response) {
       const pr = norm(prev.response), ps = norm(prev.stimulus);
       const lexical = r === pr || r === ps;
-      const semantic = it.relatednessPrev !== null && it.relatedness !== null && it.relatednessPrev > it.relatedness + 0.2 && it.relatednessPrev > 0.30;  // floor rescaled to the paraphrase model's geometry
+      const semantic = it.relatednessPrev !== null && it.relatedness !== null && it.relatednessPrev > it.relatedness + 0.2 && it.relatednessPrev > 0.35;
       if (lexical || semantic) it.flags.push('PERSEVERATION');
     }
-    if (it.reactionMs !== null && it.rtRatio !== null && it.rtRatio <= CONFIG.shortRtRatio) it.flags.push('SHORT_RT');
-    // SYMBOLIC (context flag), the poem test: the pairing works in a poem or a dream but not
-    // in a dictionary entry. Operationalised: a one- or two-word answer with no table, sound,
-    // or category link (nothing the hard rules could place) whose real-scorer relatedness sits
-    // below the leap ceiling - too far for a shared category, close enough to be reachable.
-    if (it.response && r.split(' ').length === 1 && it.assoc && it.assoc.source !== 'rule' && it.assoc.type !== 'clang' &&
-        it.scorer && it.scorer !== 'lexical-heuristic' && it.relatedness !== null && it.relatedness < CONFIG.symbolicMaxRelatedness)
-      it.flags.push('SYMBOLIC');
   });
 
   // subject profile: type shares and Jung's reaction type
@@ -828,9 +688,8 @@ function analyse(items) {
   else if (sub('definition') >= 0.20) reactionType = 'definition';
   else if (shares.outer + shares.clang >= 0.50) reactionType = 'superficial';
 
-  // pattern break: a response whose type departs from a strongly dominant type.
-  // Meaningless on short runs: shares from a handful of answers are noise.
-  if (answered.length >= CONFIG.patternMinN && dominant && dominant[1] >= CONFIG.patternBreakShare) {
+  // pattern break: a response whose type departs from a strongly dominant type
+  if (dominant && dominant[1] >= CONFIG.patternBreakShare) {
     items.forEach(it => {
       if (!it.response) return;
       const t = it.assoc.type;
@@ -845,7 +704,7 @@ function analyse(items) {
   items.forEach(it => {
     const other = it.flags.filter(f => HOT.has(f)).length;
     it.disturbed = other > 0 || (it.rtRatio !== null && it.rtRatio >= 2) || (it.flags.includes('LONG_RT') && it.flags.length > 1);
-    it.indicatorCount = it.flags.filter(f => !CONTEXT_FLAG(f)).length;
+    it.indicatorCount = it.flags.filter(f => !f.startsWith('INVESTIGATE')).length;
   });
   items.forEach((it, k) => {
     if (!it.disturbed) return;
@@ -865,438 +724,6 @@ function analyse(items) {
   return { median, rtCut, shares, dominant: dominant ? dominant[0] : null, reactionType, themes: themeList };
 }
 
-
-/* ---------------- Layer 5: framework lens (experimental) ----------------
-   An interpretive overlay after the partner model: three frameworks stacked,
-   Freud at the base (negative relation to instinct; parental material), Adler
-   above it (social compensation, status), Jung on top (ego inflation). A direct
-   hit on a higher layer implies every layer beneath it. Heuristics only:
-   response keywords plus theme-of-stimulus signals gated on `disturbed`, so a
-   calm stock association (child -> mother, to pray -> god) does not fire. */
-const FW = {
-  parental: ['mother','mom','mum','mommy','mummy','mama','father','dad','daddy','papa','parent','parents','grandmother','grandma','grandfather','grandpa'],
-  freudThemes: ['sexuality','need','body','family_love'],
-  adler: ['better','best','worse','worst','superior','inferior','strong','stronger','strongest','weak','weakness','power','powerful','powerless','win','winner','winning','lose','loser','losing','fail','failure','success','successful','boss','leader','servant','slave','rich','richer','poor','poorer','status','rank','famous','fame','respect','respected','admire','admired','envy','envious','jealous','jealousy','shame','ashamed','embarrassed','embarrassment','humiliated','humiliation','proud','pride','prestige','impress','impressive','compete','competition','dominant','dominate','submissive','obey'],
-  adlerThemes: ['money','judgement'],
-  jung: ['god','gods','goddess','divine','holy','sacred','heaven','hell','devil','satan','angel','demon','soul','spirit','spiritual','eternal','eternity','everlasting','infinite','infinity','cosmic','cosmos','universe','universal','destiny','fate','prophecy','prophet','messiah','saviour','savior','salvation','redemption','enlightenment','enlightened','awakening','transcendence','transcendent','absolute','ultimate','supreme','almighty','immortal','immortality','glory','glorious','righteous','righteousness','perfection','utopia','revolution','ideology','worship','chosen'],
-  // anchor phrases for the semantic tier: a response is a hit when its embedding sits
-  // within CONFIG.fwSemThreshold cosine of any anchor (same 0..1 scale as relatedness)
-  anchors: {
-    freud: ['sexual desire','forbidden urge','bodily craving','guilt and shame','my mother','my father','childhood memory','repressed feeling','hunger and appetite','punishment'],
-    adler: ['feeling inferior','proving superiority','social status','winning and losing','being admired','fear of humiliation','power over others','competition and rivalry','impressing people','being looked down on'],
-    jung: ['divine mission','absolute truth','spiritual transcendence','cosmic destiny','religious devotion','sacred and holy','ideological conviction','ultimate salvation','eternal glory','higher purpose']
-  }
-};
-/* Semantic tier: cosine of each unique response against every anchor phrase, through
-   whichever scorer is active. On-device: two batched embedding calls (anchors, texts),
-   cosined here. Backend: one batched /api/score POST of (anchor, response) pairs.
-   Returns null when no real scorer is available - the keyword tier then stands alone. */
-async function fwSemantic(items) {
-  const texts = [...new Set(items.filter(x => x.response && norm(x.response).split(' ').length === 1).map(x => norm(x.response)))];
-  if (!texts.length) return null;
-  const anchors = ['freud', 'adler', 'jung'].flatMap(k => FW.anchors[k].map(a => ({ layer: k, a })));
-  const simsByText = {};
-  try {
-    if (S.backend) {
-      const pairs = [];
-      texts.forEach(t => anchors.forEach(x => pairs.push({ stimulus: x.a, response: t })));
-      const res = await fetch(S.backend + '/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pairs }) });
-      if (!res.ok) return null;
-      const d = await res.json();
-      texts.forEach((t, i) => { simsByText[t] = d.scores.slice(i * anchors.length, (i + 1) * anchors.length); });
-      return { anchors, simsByText, tier: d.scorer };
-    }
-    if (S.useLocal && !Local.failed && await Local.load()) {
-      const av = (await Local.pipe(anchors.map(x => x.a), { pooling: 'mean', normalize: true })).tolist();
-      const tv = (await Local.pipe(texts, { pooling: 'mean', normalize: true })).tolist();
-      texts.forEach((t, i) => {
-        simsByText[t] = av.map(a => { let d = 0; for (let k = 0; k < a.length; k++) d += a[k] * tv[i][k]; return Math.max(0, Math.min(1, d)); });
-      });
-      return { anchors, simsByText, tier: LOCAL_NAME };
-    }
-  } catch (e) { /* keyword tier stands alone */ }
-  return null;
-}
-function frameworkLens(items, sem) {
-  const layers = { freud: [], adler: [], jung: [] };
-  items.forEach(it => {
-    const r = norm(it.response || '');
-    const words = r ? r.split(' ') : [];
-    const hit = list => words.find(w => list.includes(w));
-    const sims = sem && r ? sem.simsByText[r] : null;
-    const near = layer => {
-      if (!sims) return null;
-      let best = null;
-      sem.anchors.forEach((x, j) => { if (x.layer === layer && sims[j] >= CONFIG.fwSemThreshold && (!best || sims[j] > best.s)) best = { a: x.a, s: sims[j] }; });
-      return best;
-    };
-    // a plain stock/table answer only carries content weight if the item is also disturbed
-    const contentOk = it.disturbed || !(it.assoc && it.assoc.subtype === 'stock');
-    const ev = { freud: [], adler: [], jung: [] };
-    const pw = hit(FW.parental);
-    if (pw && contentOk) ev.freud.push('parental reference "' + pw + '"');
-    if (it.disturbed && FW.freudThemes.includes(it.theme)) ev.freud.push('disturbed on ' + (THEMES[it.theme] || it.theme) + ' stimulus');
-    if ((it.flags.includes('STEREOTYPY') || it.flags.includes('PERSEVERATION')) && FW.freudThemes.includes(it.theme)) ev.freud.push('compulsive pattern on an instinct-near stimulus');
-    const aw = hit(FW.adler);
-    if (aw && contentOk) ev.adler.push('status/comparison word "' + aw + '"');
-    if (it.disturbed && FW.adlerThemes.includes(it.theme)) ev.adler.push('disturbed on ' + (THEMES[it.theme] || it.theme) + ' stimulus');
-    const jw = hit(FW.jung);
-    if (jw && contentOk) ev.jung.push('inflated/ideological word "' + jw + '"');
-    if (contentOk) ['freud', 'adler', 'jung'].forEach(k => {
-      const b = near(k);
-      if (b) ev[k].push('semantically near "' + b.a + '" (' + b.s.toFixed(2) + ')');
-    });
-    const direct = { freud: ev.freud.length > 0, adler: ev.adler.length > 0, jung: ev.jung.length > 0 };
-    if (!direct.freud && !direct.adler && !direct.jung) { it.framework = null; return; }
-    const fw = {
-      jung: direct.jung ? { source: 'direct', evidence: ev.jung } : null,
-      adler: direct.adler ? { source: 'direct', evidence: ev.adler }
-           : direct.jung ? { source: 'implied', evidence: ['implied by the Jung layer (stacking rule)'] } : null,
-      freud: direct.freud ? { source: 'direct', evidence: ev.freud }
-           : { source: 'implied', evidence: ['implied by a layer above (stacking rule)'] },
-      apex: direct.jung ? 'jung' : direct.adler ? 'adler' : 'freud'
-    };
-    it.framework = fw;
-    ['freud', 'adler', 'jung'].forEach(k => { if (fw[k]) layers[k].push({ it, source: fw[k].source, evidence: fw[k].evidence }); });
-  });
-  return layers;
-}
-/* ---------------- Analysis: an in-depth reading ----------------
-   Deterministic template prose over the computed signals, written in a committed
-   analyst's voice (owner's direction, 2026-08-23): the page delivers a reading, not
-   a hedge. Convergence still governs the language - multi-signal findings are read
-   as central, single-signal ones as fainter traces - and the closing note states
-   plainly that the reading is rule-generated speculation, not a clinical evaluation. */
-const PLAIN = {
-  flags: {
-    LONG_RT: it => 'you took ' + (it.rtRatio ? it.rtRatio.toFixed(1) + '×' : 'well over') + ' your usual time to answer',
-    NO_RESPONSE: () => 'no answer came at all — the strongest indicator Jung knew',
-    REPEATS_STIMULUS: () => 'you echoed the word itself back, buying time while something else was held down',
-    MULTI_WORD: () => 'a whole phrase came out instead of one word — the reply arrived wrapped in explanation',
-    CLANG: () => 'the answer connected by sound rather than meaning',
-    EGOCENTRIC: () => 'the answer turned personal — the word stopped being a word and became about you',
-    STEREOTYPY: () => 'you reached for the same answer you used elsewhere in the run',
-    PERSEVERATION: it => 'the answer was still under the spell of the word before — the feeling carried over instead of clearing',
-    PATTERN_BREAK: () => 'the answer broke the style you kept everywhere else',
-    SHORT_RT: () => 'you answered markedly faster than your own baseline — the snap of a prepared guard',
-    SYMBOLIC: () => 'the pairing works in a poem or a dream but not in a dictionary — the psyche answered in its own image'
-  },
-  themes: {
-    death_illness: 'Jung placed death and sickness in the list because grief and the fear of loss anchor the commonest complexes, and they keep working long after we think we have filed them away',
-    family_love: 'family, marriage and intimacy are where the earliest patterns live; these words sound the oldest chords in a person',
-    money: 'money words probe security and self-worth — what you have, what you owe, what you believe you are owed',
-    morality: 'words of conscience press on the gap between the person presented and the person feared',
-    aggression: 'anger words test what you do with your own force: spend it, swallow it, or turn it inward',
-    pain_fear: 'fear and pain words go straight at whatever you brace against',
-    affection: 'words of warmth probe where tenderness is easy and where it has been disappointed',
-    separation: 'parting words touch every goodbye that never quite finished',
-    mood: 'mood words invite the feeling that is usually kept off-stage',
-    judgement: 'words about being judged probe how much the eyes of others weigh on you',
-    need: 'hunger and need words reach the places where wanting itself feels dangerous',
-    sexuality: 'the explicit words are in the list by clinical design: no territory is more defended',
-    care: 'duty and care words weigh what you carry for others, willingly or not',
-    decision: 'choosing words press on the fear of the wrong life',
-    fortune: 'luck words ask whether the world has felt like a friend or an opponent',
-    age: 'age words touch time, and what it has taken or threatens to take',
-    body: 'body words live close to the instincts and to what you would rather not feel physically'
-  },
-  themeNeutral: 'an everyday word, which sharpens the finding: the charge cannot come from the dictionary, so it comes from a private association — something this word touches in your history alone',
-  rtype: {
-    objective: 'You meet the world matter-of-factly: word came, answer went, little interference. A psyche this orderly does not stumble by accident — which is precisely why the places it faltered carry weight.',
-    egocentric: 'Your associations bend back toward yourself; the words kept becoming mirrors. The material of this run lives close to the skin, and the ego stands in the doorway of nearly every answer.',
-    predicate: 'You answer with judgements where associations would do — good, terrible, lovely. Jung read this style as feeling under pressure: the emotion is present but displaced into evaluation, the verdict standing where the affect is not allowed to speak.',
-    definition: 'You answered like a person sitting an examination, defining rather than associating. To define a word is to hold it at arm\'s length; the style guards against exposure, and the question is what would have surfaced had the guard come down.',
-    superficial: 'Your answers ran on habit and sound. Surface-holding this consistent is itself a statement: the depth is defended — by fatigue, by distraction, or by an unwillingness to let this list go below.'
-  },
-  fw: {
-    freud: 'the instinct layer — Freud\'s territory: appetite, the forbidden, the parents; the base of the stack, where the earliest patterns were laid down',
-    adler: 'the compensation layer — Adler\'s territory: rank, comparison, the fear of being less; social posturing that conceals the instinct beneath it',
-    jung: 'the inflation layer — Jung\'s territory: the absolute, the sacred, the ideological; the ego borrowing size from something larger than itself'
-  }
-};
-function esc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-function buildInsights(items, A) {
-  const answered = items.filter(x => x.response), disturbed = items.filter(x => x.disturbed);
-  const signalled = items.filter(x => (x.convergence || 0) > 0);
-  let h = '';
-
-  // ---- portrait
-  h += '<div class="eyebrow">The portrait</div>';
-  const rate = answered.length ? disturbed.length / answered.length : 0;
-  let weather;
-  if (rate < 0.08) weather = 'The sheet is quiet on its surface: ' + disturbed.length + ' of ' + answered.length + ' answers broke your baseline. A quiet sheet is not an empty psyche — it is a well-guarded one, and the breaches below did real work to get through.';
-  else if (rate < 0.2) weather = 'A psyche in ordinary weather: most answers ran clean, and a definable set of places did not. Those places are not noise; they map where the charge sits.';
-  else weather = 'The sheet is turbulent: ' + disturbed.length + ' of ' + answered.length + ' answers broke your baseline. Either the day was heavy, or the charged material in this psyche sits near the surface and speaks readily.';
-  h += '<p>' + weather + '</p>';
-  h += '<p>' + (PLAIN.rtype[A.reactionType] || '') + ' Your baseline tempo: <b>' + (A.median ? secs(A.median) + ' seconds' : '—') + '</b> to a word.</p>';
-
-  // ---- the complexes
-  if (!signalled.length) {
-    h += '<div class="insight calm"><h3>Nothing surfaced</h3><p class="observed">No signal of any kind rose above your baseline. Read plainly: either the complexes kept their distance today, or the guard held from the first word to the last — and a guard that complete is itself worth noticing. The classical next step is a re-run on another day, when the watchman is tired.</p></div>';
-  } else {
-    h += '<div class="eyebrow" style="margin-top:22px">The complexes at work</div>';
-    const notable = [...signalled].sort((a, b) => ((b.convergence || 0) - (a.convergence || 0)) || (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0))).slice(0, 7);
-    notable.forEach(it => {
-      const obs = it.flags.filter(f => PLAIN.flags[f]).map(f => PLAIN.flags[f](it));
-      const g = it.signalGroups || [];
-      h += '<div class="insight"><h3>&ldquo;' + esc(it.stimulus) + '&rdquo; &rarr; ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : '<span class="muted">no answer</span>') + '</h3>';
-      h += '<p class="observed"><b>The record:</b> ' + (obs.length ? obs.join('; ') : 'the signal is in the content alone') + '. ' +
-        (g.length > 1 ? '<b>' + g.length + ' kinds of signal converge here (' + g.join(' + ') + ') — this is where the run points hardest.</b>'
-                      : 'A single signal (' + (g[0] || 'timing') + ') — a fainter trace: the complex brushed this word rather than seizing it.') + '</p>';
-      let why = PLAIN.themes[it.theme] || PLAIN.themeNeutral;
-      if (it.relatedness !== null && it.relatedness < 0.15 && it.response) why += '. The answer itself arrived from somewhere else entirely — the complex substituting its own material for the expected word';
-      h += '<p class="maybe"><b>The reading:</b> Something answered here that was not merely the dictionary. ' + why + '.</p>';
-      if (it.framework) {
-        const direct = ['jung', 'adler', 'freud'].filter(k => it.framework[k] && it.framework[k].source === 'direct');
-        if (direct.length) {
-          const k = direct[0];
-          const below = { jung: 'and where inflation stands, compensation and instinct stand beneath it', adler: 'and where compensation stands, instinct stands beneath it', freud: '' }[k];
-          h += '<p class="maybe"><b>Its layer:</b> the language of this answer carries ' + PLAIN.fw[k] + (below ? ' — ' + below : '') + '.' +
-            (it.framework.corroborated === false ? ' The trace is content-only, the faintest kind — an ember rather than a fire.' : '') +
-            ' <span class="muted">(' + esc(it.framework[k].evidence.join('; ')) + ')</span></p>';
-        }
-      }
-      h += '<p class="ask">The question the analyst would put to you: what does ' + (it.response ? '&ldquo;' + esc(it.response) + '&rdquo;' : 'the silence') + ' hold, that &ldquo;' + esc(it.stimulus) + '&rdquo; could reach it?</p></div>';
-    });
-
-    // ---- constellations
-    const constellations = A.themes.filter(t => t.disturbed >= 2 && t.disturbed / t.total >= 0.5);
-    if (constellations.length) {
-      h += '<div class="eyebrow" style="margin-top:22px">The constellation' + (constellations.length > 1 ? 's' : '') + '</div>';
-      constellations.forEach(t => {
-        h += '<div class="insight"><h3>' + esc(t.label) + '</h3><p class="observed">' + t.disturbed + ' of ' + t.total + ' words in this territory drew a disturbed reaction — a grouping Jung called a constellation: one charged centre pulling several words into its orbit. This is the strongest structure a single sitting can show.</p><p class="maybe">' + (PLAIN.themes[t.theme] || PLAIN.themeNeutral) + '. Whatever sits at this centre organises more of the sheet than any single answer — begin here.</p></div>';
-      });
-    }
-
-    // ---- the stack
-    const ls = {}; ['freud', 'adler', 'jung'].forEach(k => ls[k] = { direct: 0, corroborated: 0, implied: 0 });
-    items.forEach(it => {
-      if (!it.framework) return;
-      ['freud', 'adler', 'jung'].forEach(k => {
-        const e = it.framework[k]; if (!e) return;
-        if (e.source === 'direct') { ls[k].direct++; if (it.framework.corroborated) ls[k].corroborated++; }
-        else ls[k].implied++;
-      });
-    });
-    if (ls.freud.direct + ls.adler.direct + ls.jung.direct > 0) {
-      h += '<div class="eyebrow" style="margin-top:22px">The stack</div><div class="insight">';
-      if (ls.jung.direct) h += '<p class="maybe"><b>Top — inflation:</b> ' + ls.jung.direct + ' answer' + (ls.jung.direct > 1 ? 's' : '') + ' reached for the absolute. Where the ego borrows size, Adler\'s comparing and Freud\'s instinct are at work beneath the robes.</p>';
-      if (ls.adler.direct) h += '<p class="maybe"><b>Middle — compensation:</b> ' + ls.adler.direct + ' answer' + (ls.adler.direct > 1 ? 's' : '') + ' spoke the language of rank and comparison — position defended in words, concealing the instinct it stands on.</p>';
-      if (ls.freud.direct || ls.freud.implied) h += '<p class="maybe"><b>Base — instinct and the parents:</b> ' + (ls.freud.direct ? ls.freud.direct + ' answer' + (ls.freud.direct > 1 ? 's' : '') + ' touched it directly' : 'no answer touched it directly') + (ls.freud.implied ? ', and every layer above implies it — the base is always load-bearing' : '') + '.</p>';
-      h += '</div>';
-    }
-
-    // ---- the defence
-    const tally = f => items.filter(x => x.flags.includes(f)).length;
-    let defence;
-    if (tally('NO_RESPONSE') >= 2) defence = 'refusal: when the material comes too near, the answer simply does not come. The blank is your wall, and it is a thick one';
-    else if (tally('CLANG') >= 2) defence = 'retreat into sound: where meaning is unwelcome, you rhyme your way past it';
-    else if (tally('STEREOTYPY') >= 3) defence = 'the shield-word: one safe answer, produced again and again, standing in front of whatever would otherwise speak';
-    else if (tally('MULTI_WORD') >= 2) defence = 'explanation: the single word gets buried under a sentence, and the sentence is the hiding place';
-    else defence = 'delay: time itself is your buffer — the guarded material announces itself by making you wait';
-    h += '<div class="eyebrow" style="margin-top:22px">The characteristic defence</div><div class="insight"><p class="maybe">Every psyche has a favourite way of not answering. In this run, yours is <b>' + defence + '</b>.</p></div>';
-  }
-
-  // ---- analyst's note
-  h += '<p class="legend" style="margin-top:22px"><b>Analyst\'s note.</b> This reading was generated by fixed interpretive rules in the Jungian tradition, from your timings and word choices — the record it read from is shown in every card, and the protocol sheet holds the raw measurements. It speaks with conviction because a half-committed analysis is useless; conviction is a style, not proof. Take what resonates, argue with what does not, and know that this is generated speculation for reflection — not a clinical evaluation, which only a trained human can give.</p>';
-  return h;
-}
-
-/* ---------------- The reading: pop landing over the same analysis ----------------
-   Deterministic mappings from the technical layers to a personality reading:
-   - 24 types = 4 houses (dominant framework layer, or the Veil when quiet)
-                x 3 temperaments (disturbance rate) x 2 modes (inner vs outer share).
-   - 6 complexes scored from theme groups + lens bonuses, shown as percentages.
-   - 128 castings = 7 binary lines from real metrics (2^7), each line shown as a
-     solid/broken bar; the reading text is fixed per casting (I-Ching style).
-   All of it is recomputable from the export; nothing is random. */
-const RD = {
-  houses: {
-    freud: { label: "House of the Deep Root", sigil: "\u{1F40D}", bg1: "#2b0a12", bg2: "#4a1224", accent: "#ff6b81", glow: "#ff8fa3",
-      portrait: "Your reading runs on the oldest fuel: appetite, memory, the family table. What moves you moves from far below the surface, and it was moving tonight." },
-    adler: { label: "House of Mirrors", sigil: "\u2694\uFE0F", bg1: "#1a1030", bg2: "#31205a", accent: "#c9a227", glow: "#b388ff",
-      portrait: "Your reading turns on standing and being seen. Somewhere in you a ledger is kept — who rose, who fell, where you stand — and tonight the ledger wrote in the margins of your answers." },
-    jung: { label: "House of the Sun", sigil: "\u2600\uFE0F", bg1: "#101b3d", bg2: "#1f2f66", accent: "#ffb703", glow: "#ffd166",
-      portrait: "Your reading reaches upward: toward the absolute, the destined, the larger-than-life. When you answered, something in you kept borrowing light from very high places." },
-    veil: { label: "House of the Veil", sigil: "\u{1F32B}\uFE0F", bg1: "#0e2226", bg2: "#173a40", accent: "#7fd8be", glow: "#a8e6cf",
-      portrait: "Your reading is written in mist. The deeper engines kept their counsel tonight — which is not emptiness, but a door held politely closed." }
-  },
-  names: {
-    freud: [["The Sleeping Volcano","Still ground, molten memory."],["The Locked Cellar","Everything kept; nothing discussed."],["The Wolf Beneath","It walks when you are not looking."],["The Midnight Appetite","Fed at odd hours, denied by day."],["The Devouring Root","What feeds you also holds you."],["The Unquiet Cradle","The first house never quite empties."]],
-    adler: [["The Velvet Armor","Soft to the touch, impossible to pierce."],["The Polished Duelist","Every mirror is an opponent."],["The Iron Understudy","Rehearsing a part already yours."],["The Applause Hunter","The room decides how you feel."],["The Throne of Thorns","You won the seat; it keeps the score."],["The Ladder in the Storm","Climbing matters more than the weather."]],
-    jung: [["The Quiet Prophet","Certain of things not yet said."],["The Borrowed Halo","It fits; it is not yours."],["The Tower Oracle","Seeing far, from very high up."],["The Gilded Kite","Bright, ascending, string unattended."],["The Star-Swallower","Hungry for what cannot be held."],["Icarus Ascendant","Magnificent, and rising anyway."]],
-    veil: [["The Still Lake","Depth without a single ripple."],["The Marble Guest","Present, polite, and unreadable."],["The Fog Walker","Moving surely through what hides you."],["The Curtained Window","Warm light, drawn drapes."],["The Storm Behind Glass","Weather sealed in perfect silence."],["The Scattered Mask","Many quick faces, none held long."]]
-  },
-  temperament: [
-    ["Still", "Your surface barely moved — a calm that is either peace or excellent security."],
-    ["Weather", "Your surface moved the way a real life moves: mostly steady, stirred in particular places."],
-    ["Storm", "Your surface moved constantly — whatever you carry sits close to the skin and speaks readily."]
-  ],
-  mode: [
-    ["Deep", "You answer from meaning: your words reach into things."],
-    ["Surface", "You answer from rhythm and habit: your words skate — quick, social, and hard to catch."]
-  ],
-  complexes: [
-    { key: "mother", label: "The Mother's Thread", themes: ["family_love","affection","care"], layer: null, parental: true },
-    { key: "shadow", label: "The Shadow", themes: ["aggression","morality"], layer: null },
-    { key: "wound", label: "The Old Wound", themes: ["pain_fear","death_illness","mood","separation"], layer: null },
-    { key: "throne", label: "The Throne", themes: ["money","judgement"], layer: "adler" },
-    { key: "halo", label: "The Halo", themes: ["fortune","decision"], layer: "jung" },
-    { key: "hunger", label: "The Hunger", themes: ["sexuality","need","body"], layer: "freud" }
-  ],
-  states: p => p >= 70 ? "burning" : p >= 40 ? "awake" : p >= 15 ? "stirring" : "dormant",
-  oracle: {
-    open: [
-      "You answered quickly over quiet water; the current beneath barely showed itself.",
-      "You answered quickly, and often the quickness was the message: speed is also a door closing.",
-      "You took your time over quiet water; your pauses were courtesies, not confessions.",
-      "You took your time, and the time went somewhere: certain words made you pay a toll before passing."
-    ],
-    mid: [
-      "Nothing silenced you and nothing clung; each word was met and released.",
-      "Nothing silenced you, yet some answers refused to leave — they trailed into the words that followed like smoke.",
-      "At least once, silence answered for you; the blank space in your record is its most honest line.",
-      "Silence took some words and echo took others; what could not be said was carried forward instead."
-    ],
-    turn: [
-      "You reach into words for their meaning, so what stirred in you stirred at depth.",
-      "You travel the surface of words, so what stirred in you stirred beneath a practiced calm."
-    ],
-    close: [
-      "The old rooms stayed locked tonight; whatever was stirred, it was not the foundations.",
-      "Above, something reached for standing or for glory; the foundations beneath it stayed quiet, biding.",
-      "The foundation spoke — appetite, family, the first house — plainly, without decoration.",
-      "The whole tower answered at once: foundation, ladder, and spire. Read this casting twice."
-    ]
-  }
-};
-function computeReading(items, A) {
-  const answered = items.filter(x => x.response);
-  const disturbed = items.filter(x => x.disturbed);
-  const rate = answered.length ? disturbed.length / answered.length : 0;
-  const ls = { freud: 0, adler: 0, jung: 0 };
-  items.forEach(it => { if (!it.framework) return; ["freud","adler","jung"].forEach(k => {
-    const e = it.framework[k]; if (e && e.source === "direct") ls[k] += it.framework.corroborated ? 2 : 1; }); });
-  const best = Object.entries(ls).sort((a, b) => b[1] - a[1])[0];
-  const house = best[1] > 0 ? best[0] : "veil";
-  const houseIdx = ["freud","adler","jung","veil"].indexOf(house);
-  const tempIdx = rate < 0.10 ? 0 : rate < 0.25 ? 1 : 2;
-  const innerShare = A.shares ? A.shares.inner : 0;
-  const surfShare = A.shares ? A.shares.outer + A.shares.clang : 0;
-  const modeIdx = innerShare >= surfShare ? 0 : 1;
-  const typeIdx = houseIdx * 6 + tempIdx * 2 + modeIdx;   // 0..23
-  const complexes = RD.complexes.map(c => {
-    const members = items.filter(it => c.themes.includes(it.theme));
-    let score = 0;
-    members.forEach(it => { score += (it.disturbed ? 2 : 0) + Math.min(it.convergence || 0, 3); });
-    if (c.layer) score += ls[c.layer];
-    if (c.parental) items.forEach(it => { const f = it.framework && it.framework.freud;
-      if (f && f.source === "direct" && f.evidence.some(e => e.indexOf("parental") === 0)) score += 2; });
-    const denom = 2.5 * Math.max(members.length, 2) + 2;
-    return { key: c.key, label: c.label, pct: Math.max(0, Math.min(96, Math.round(100 * score / denom))) };  // never total: no complex owns a person
-  });
-  const bits = [
-    A.median >= 1200 ? 1 : 0,
-    rate >= 0.15 ? 1 : 0,
-    items.some(x => x.flags.includes("NO_RESPONSE")) ? 1 : 0,
-    items.some(x => ["PERSEVERATION","REPEATS_STIMULUS","STEREOTYPY"].some(f => x.flags.includes(f))) ? 1 : 0,
-    modeIdx === 0 ? 1 : 0,
-    ls.freud > 0 ? 1 : 0,
-    (ls.jung > 0 || ls.adler > 0) ? 1 : 0
-  ];
-  const o = bits[0] * 2 + bits[1], m = bits[2] * 2 + bits[3], t = bits[4], cl = bits[5] * 2 + bits[6];
-  const casting = ((o * 4 + m) * 2 + t) * 4 + cl;   // 0..127
-  const oracle = [RD.oracle.open[o], RD.oracle.mid[m], RD.oracle.turn[t], RD.oracle.close[cl]].join(" ");
-  const signalled = [...items].filter(x => (x.convergence || 0) > 0)
-    .sort((a, b) => ((b.convergence || 0) - (a.convergence || 0)) || (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0)));
-  const calm = answered.filter(x => !(x.convergence > 0)).sort((a, b) => (b.relatedness || 0) - (a.relatedness || 0));
-  const cards = signalled.slice(0, 3);
-  while (cards.length < 3 && calm.length) cards.push(Object.assign(calm.shift(), { calmCard: true }));
-  return { house, houseIdx, tempIdx, modeIdx, typeIdx, complexes, bits, casting, oracle, cards, rate };
-}
-function cardInsight(it) {
-  if (it.calmCard) return "Here your waters were untroubled: the answer came clean and close. A card drawn for balance — not everything in you is weather.";
-  const bits = [];
-  if (it.rtRatio !== null && it.rtRatio >= 1.5) bits.push("you lingered " + it.rtRatio.toFixed(1) + " times longer than your usual beat");
-  if (it.flags.includes("SHORT_RT")) bits.push("the answer leapt out before thought could intervene");
-  if (it.flags.includes("NO_RESPONSE")) bits.push("no answer came at all — the loudest kind of quiet");
-  if (it.flags.includes("PERSEVERATION")) bits.push("the previous word was still holding your hand");
-  if (it.flags.includes("EGOCENTRIC")) bits.push("the word turned into a mirror");
-  if (it.flags.includes("SYMBOLIC")) bits.push("your answer belongs to this word the way a dream belongs to a day");
-  if (it.flags.includes("MULTI_WORD")) bits.push("a whole phrase rushed out where one word would do");
-  const theme = PLAIN.themes[it.theme];
-  return (bits.length ? "Here " + bits.slice(0, 2).join(", and ") + ". " : "") +
-    (theme ? theme.charAt(0).toUpperCase() + theme.slice(1) + "." : "An everyday word — so whatever it touched is yours alone, and worth a quiet minute.");
-}
-function renderReading(R) {
-  const H = RD.houses[R.house];
-  const el = $("reading");
-  el.style.setProperty("--rd-bg1", H.bg1); el.style.setProperty("--rd-bg2", H.bg2);
-  el.style.setProperty("--rd-accent", H.accent); el.style.setProperty("--rd-glow", H.glow);
-  const nm = RD.names[R.house][R.tempIdx * 2 + R.modeIdx];
-  $("rd_sigil").textContent = H.sigil;
-  $("rd_name").textContent = nm[0];
-  $("rd_epithet").textContent = nm[1];
-  $("rd_typenum").textContent = "Type " + (R.typeIdx + 1) + " of 24 \u00B7 " + H.label;
-  $("rd_portrait").innerHTML = esc(H.portrait) + " " + esc(RD.temperament[R.tempIdx][1]) + " " + esc(RD.mode[R.modeIdx][1]);
-  $("rd_bars").innerHTML = R.complexes.map(c =>
-    '<div class="rd-bar"><div class="rd-lab"><span>' + c.label + '</span><span class="rd-state">' + c.pct + '% \u00B7 ' + RD.states(c.pct) + '</span></div>' +
-    '<div class="rd-track"><div class="rd-fill" data-w="' + c.pct + '"></div></div></div>').join("");
-  $("rd_cards").innerHTML = R.cards.map(it =>
-    '<div class="rd-card"><div class="rd-stim">' + esc(it.stimulus) + '</div>' +
-    '<div class="rd-resp">' + (it.response ? '\u201C' + esc(it.response) + '\u201D' : "(silence)") + '</div>' +
-    '<p>' + esc(cardInsight(it)) + '</p></div>').join("");
-  $("rd_hex").innerHTML = R.bits.map(b =>
-    '<div class="rd-line ' + (b ? "solid" : "") + '">' + (b ? "<span></span>" : "<span></span><span></span>") + '</div>').join("");
-  $("rd_castnum").textContent = "CASTING " + (R.casting + 1) + " OF 128";
-  $("rd_oracle").textContent = R.oracle;
-  requestAnimationFrame(() => requestAnimationFrame(() =>
-    [...document.querySelectorAll("#reading .rd-fill")].forEach(f => { f.style.width = f.dataset.w + "%"; })));
-}
-
-/* Convergence: Jung read combinations, not single signs. Count how many independent
-   kinds of signal touch an item - timing, form, pattern, content - and mark framework
-   findings that rest on content alone as uncorroborated. */
-function computeConvergence(items) {
-  const KINDS = [
-    ['timing', ['LONG_RT', 'SHORT_RT']],
-    ['form', ['NO_RESPONSE', 'REPEATS_STIMULUS', 'MULTI_WORD']],
-    ['pattern', ['CLANG', 'EGOCENTRIC', 'STEREOTYPY', 'PERSEVERATION', 'PATTERN_BREAK']]
-  ];
-  items.forEach(it => {
-    const g = KINDS.filter(([, fs]) => fs.some(f => it.flags.includes(f))).map(([n]) => n);
-    const fwDirect = it.framework && ['freud', 'adler', 'jung'].some(k => it.framework[k] && it.framework[k].source === 'direct');
-    if (it.flags.includes('SYMBOLIC') || fwDirect) g.push('content');
-    it.signalGroups = g;
-    it.convergence = g.length;
-    if (it.framework) it.framework.corroborated = g.some(x => x !== 'content');
-  });
-}
-
-function renderFrameworkLens(layers, tier) {
-  const meta = [
-    ['jung', 'Jung — ego inflation', 'lofty, ideological, spiritual or political absolutes'],
-    ['adler', 'Adler — social compensation', 'inferiority/superiority, posturing, status'],
-    ['freud', 'Freud — instinct & parental', 'repression or compulsion around instinct; mother/father material']
-  ];
-  const rows = meta.map(([k, label, sub]) => {
-    const direct = layers[k].filter(x => x.source === 'direct').length;
-    return '<tr><td class="w">' + label + '<div class="muted" style="font-size:12px">' + sub + '</div></td>' +
-      '<td class="t ' + (direct ? 'hot' : '') + '">' + direct + '</td><td class="t">' + layers[k].length + '</td></tr>';
-  }).join('');
-  const lists = meta.map(([k, label]) => {
-    const direct = layers[k].filter(x => x.source === 'direct');
-    if (!direct.length) return '';
-    return '<p class="legend" style="margin:6px 0 0"><b>' + label.split(' — ')[0] + ':</b> ' +
-      direct.slice(0, 10).map(x => x.it.stimulus + ' → ' + (x.it.response || '—') + ' <span class="muted">(' + x.evidence.join('; ') + (x.it.framework && x.it.framework.corroborated === false ? '; content-only, uncorroborated' : '') + ')</span>').join(' · ') +
-      (direct.length > 10 ? ' <span class="muted">+' + (direct.length - 10) + ' more</span>' : '') + '</p>';
-  }).join('');
-  $('fwlens').innerHTML = '<div class="eyebrow" style="margin-top:24px">Framework lens (experimental)</div>' +
-    '<table class="themes"><thead><tr><th>Layer (Jung on top, Freud at the base)</th><th>Direct</th><th>With implied</th></tr></thead><tbody>' + rows + '</tbody></table>' + lists +
-    '<p class="legend">An interpretive overlay, not a finding. Keyword and theme heuristics sort charged material into three stacked layers — Freud at the base (instinct, parental patterns), Adler above it (social compensation), Jung on top (ego inflation) — and a direct hit on a higher layer implies the layers beneath it. Common stock associations (child → mother, to pray → god) count only when the response is also disturbed. ' +
-    (tier ? 'Semantic matching against anchor phrases ran on ' + tier + ' (cosine ≥ ' + CONFIG.fwSemThreshold.toFixed(2) + ').' : 'No scorer was available, so only exact keyword matching ran.') +
-    ' Read these as prompts for the follow-up interview, not verdicts.</p>';
-}
 
 /* ---------------- Import a saved session straight into analysis ----------------
    Accepts v1 and v2 exports. Missing fields are filled from META; classification and flags are
@@ -1318,7 +745,7 @@ function normalizeItem(raw, k, set) {
 async function rescore(items) {
   const useLocal = !S.backend && $('localmodel').checked;
   if (!S.backend && !useLocal) return;
-  const need = items.filter(x => x.response && (x.relatedness === null || x.scorer === 'lexical-heuristic' || /(^|\/| )all-MiniLM/.test(x.scorer || '') || x.relatednessPrev === null));
+  const need = items.filter(x => x.response && (x.relatedness === null || x.scorer === 'lexical-heuristic' || x.relatednessPrev === null));
   if (!need.length) return;
   const pairs = [];
   need.forEach(it => { const prev = items.find(x => x.index === it.index - 1); pairs.push({ stimulus: it.stimulus, response: it.response }); pairs.push({ stimulus: prev ? prev.stimulus : it.stimulus, response: it.response }); });
@@ -1373,7 +800,7 @@ async function finish() {
   S.items.forEach(it => { it.assoc = classifyRule(it); });
   await classifyLLM(S.items);
   const A = analyse(S.items);
-  const HARD = f => !CONTEXT_FLAG(f);
+  const HARD = f => !f.startsWith('INVESTIGATE');
   const flagged = S.items.filter(x => x.disturbed);
   const scorer = (S.items.find(x => x.scorer) || {}).scorer || '—';
   const classifier = (S.items.find(x => x.assoc && !x.assoc.source.startsWith('rule')) || { assoc: { source: 'rules only' } }).assoc.source;
@@ -1391,26 +818,15 @@ async function finish() {
     <div class="shares">${['inner', 'outer', 'clang', 'remainder', 'egocentric'].map(t => `<span><b>${pct(A.shares[t])}</b> ${t}</span>`).join('')}${A.shares.unclassified ? `<span><b>${pct(A.shares.unclassified)}</b> unplaced (needs a scorer)</span>` : ''}</div>`;
   const loadedThemes = A.themes.filter(t => t.loaded), neutral = A.themes.filter(t => !t.loaded);
   const row = t => `<tr><td class="w">${t.label}</td><td class="t ${t.disturbed / t.total >= 0.5 ? 'hot' : ''}">${t.disturbed} / ${t.total}</td><td class="t">${t.indicators}</td></tr>`;
-  $('themes').innerHTML = (loadedThemes.length ? `<thead><tr><th>Theme (loaded stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${loadedThemes.map(row).join('')}</tbody>` : '')
-    + (neutral.length ? `<thead><tr><th>Theme (neutral stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${neutral.map(row).join('')}</tbody>` : '');
-
-  // framework lens (Layer 5)
-  let fwSummary = null;
-  if (CONFIG.frameworkLens) {
-    const sem = await fwSemantic(S.items);
-    const FWL = frameworkLens(S.items, sem);
-    computeConvergence(S.items);
-    renderFrameworkLens(FWL, sem ? sem.tier : null);
-    fwSummary = { semanticTier: sem ? sem.tier : null };
-    ['freud', 'adler', 'jung'].forEach(k => { fwSummary[k] = { direct: FWL[k].filter(x => x.source === 'direct').length, corroborated: FWL[k].filter(x => x.source === 'direct' && x.it.framework.corroborated).length, withImplied: FWL[k].length }; });
-  } else { $('fwlens').innerHTML = ''; S.items.forEach(it => { it.framework = null; }); computeConvergence(S.items); }
+  $('themes').innerHTML = `<thead><tr><th>Theme (loaded stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${loadedThemes.map(row).join('')}</tbody>
+    <thead><tr><th>Theme (neutral stimuli)</th><th>Disturbed</th><th>Indicators</th></tr></thead><tbody>${neutral.map(row).join('')}</tbody>`;
 
   // ledger
   const tb = $('ledger'); tb.innerHTML = '';
   S.items.forEach(it => {
     const tr = document.createElement('tr');
     const hard = it.flags.filter(HARD), ctx = it.flags.filter(f => !HARD(f));
-    if (it.disturbed) tr.className = 'flagged'; else if (hard.length) tr.className = 'marked'; if (it.flags.some(f => f.startsWith('INVESTIGATE'))) tr.classList.add('investigate');
+    if (it.disturbed) tr.className = 'flagged'; else if (hard.length) tr.className = 'marked'; if (ctx.length) tr.classList.add('investigate');
     const a = it.assoc || {};
     const typeTag = it.response ? `<span class="tag type">${TYPE_LABEL[a.type] || '?'}${a.subtype ? ' · ' + a.subtype : ''}</span>` : '';
     const tags = [typeTag, ...hard.map(f => `<span class="tag">${f.replace(/_/g, ' ')}</span>`), ...ctx.map(f => `<span class="tag ctx">${f.replace(/_/g, ' ')}</span>`)].join('');
@@ -1421,25 +837,9 @@ async function finish() {
       <td class="c ${CONFIG.flagLowRelatedness && it.relatedness !== null && it.relatedness < CONFIG.relatedThreshold ? 'low' : ''}">${it.relatedness === null ? '—' : it.relatedness.toFixed(2)}</td>`;
     tb.appendChild(tr);
   });
-  $('insightbody').innerHTML = buildInsights(S.items, A);
-
-  const R = computeReading(S.items, A);
-  renderReading(R);
-  S.reading = R;
-  $('results').classList.add('hide');
-  $('reading').classList.remove('hide');
-  window.scrollTo(0, 0);
-
-  S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, scorer, classifier, reactionType: A.reactionType, dominantType: A.dominant, typeShares: A.shares, themes: A.themes, frameworks: fwSummary, reading: S.reading ? { type: S.reading.typeIdx + 1, house: S.reading.house, casting: S.reading.casting + 1, complexes: S.reading.complexes, bits: S.reading.bits } : null, config: CONFIG };
+  S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, scorer, classifier, reactionType: A.reactionType, dominantType: A.dominant, typeShares: A.shares, themes: A.themes, config: CONFIG };
 }
 
-$('toinsights').onclick = () => { $('results').classList.add('hide'); $('insights').classList.remove('hide'); window.scrollTo(0, 0); };
-$('toreading').onclick = () => { $('results').classList.add('hide'); $('reading').classList.remove('hide'); window.scrollTo(0, 0); };
-$('rd_record').onclick = () => { $('reading').classList.add('hide'); $('results').classList.remove('hide'); window.scrollTo(0, 0); };
-$('rd_analysis').onclick = () => { $('reading').classList.add('hide'); $('insights').classList.remove('hide'); window.scrollTo(0, 0); };
-$('rd_export').onclick = () => $('export').click();
-$('rd_new').onclick = () => location.reload();
-$('backsheet').onclick = () => { $('insights').classList.add('hide'); $('results').classList.remove('hide'); window.scrollTo(0, 0); };
 $('export').onclick = () => {
   const payload = { schema: 'jung-wat/session/v3', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, summary: S.summary, items: S.items };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
