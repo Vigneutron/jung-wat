@@ -119,6 +119,42 @@
   .insight .ask { font-style: italic; color: var(--chrono); }
   .insight.calm { border-left-color: var(--rule); }
   #insightbody > p { font-size: 15px; line-height: 1.7; }
+  /* ---- the reading (pop landing). Palette arrives via CSS vars on #reading. */
+  #reading { --rd-bg1:#1a1030; --rd-bg2:#2d1b4e; --rd-accent:#c9a227; --rd-glow:#b388ff; --rd-ink:#f5f0ff;
+    background: linear-gradient(160deg, var(--rd-bg1), var(--rd-bg2)); color: var(--rd-ink);
+    margin: -28px -20px; padding: 40px 22px 30px; min-height: 100vh; }
+  #reading .rd-wrap { max-width: 660px; margin: 0 auto; }
+  .rd-eyebrow { font: 600 11px var(--sans); letter-spacing: .22em; text-transform: uppercase; opacity: .65; }
+  .rd-hero { text-align: center; padding: 10px 0 26px; }
+  .rd-sigil { font-size: 54px; line-height: 1; filter: drop-shadow(0 0 18px var(--rd-glow)); }
+  .rd-name { font: 700 34px/1.15 var(--serif); margin: 14px 0 6px; color: var(--rd-accent); text-shadow: 0 0 24px rgba(0,0,0,.4); }
+  .rd-epithet { font: italic 17px var(--serif); opacity: .9; }
+  .rd-typenum { display: inline-block; margin-top: 12px; padding: 4px 14px; border: 1px solid var(--rd-accent); border-radius: 999px; font: 600 12px var(--sans); letter-spacing: .12em; color: var(--rd-accent); }
+  .rd-portrait { font: 16px/1.7 var(--serif); opacity: .95; margin: 18px 0 6px; }
+  .rd-sec { margin-top: 34px; }
+  .rd-sec h2 { font: 700 20px var(--serif); color: var(--rd-accent); margin: 6px 0 14px; }
+  .rd-bar { margin: 12px 0; }
+  .rd-bar .rd-lab { display: flex; justify-content: space-between; font: 600 13px var(--sans); margin-bottom: 5px; }
+  .rd-bar .rd-lab .rd-state { opacity: .65; font-weight: 400; }
+  .rd-track { height: 12px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .rd-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--rd-accent), var(--rd-glow)); transition: width 1.1s cubic-bezier(.2,.7,.2,1); }
+  .rd-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .rd-card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 16px 14px; backdrop-filter: blur(2px); }
+  .rd-card .rd-stim { font: 700 19px var(--serif); color: var(--rd-accent); }
+  .rd-card .rd-resp { font: italic 14px var(--serif); opacity: .85; margin: 3px 0 10px; }
+  .rd-card p { font: 13px/1.6 var(--sans); margin: 0; opacity: .92; }
+  .rd-cast { display: flex; gap: 18px; align-items: flex-start; background: rgba(0,0,0,.22); border-radius: 14px; padding: 18px 16px; }
+  .rd-hex { display: flex; flex-direction: column-reverse; gap: 5px; flex: 0 0 auto; padding-top: 4px; }
+  .rd-line { display: flex; gap: 6px; }
+  .rd-line span { height: 6px; width: 18px; border-radius: 2px; background: var(--rd-accent); box-shadow: 0 0 8px var(--rd-glow); }
+  .rd-line.solid span { width: 42px; }
+  .rd-cast p { font: 15px/1.75 var(--serif); margin: 0; }
+  .rd-castnum { font: 600 11px var(--sans); letter-spacing: .18em; opacity: .6; display: block; margin-bottom: 8px; }
+  .rd-foot { margin-top: 34px; text-align: center; }
+  .rd-foot .rd-note { font: italic 13px var(--serif); opacity: .6; margin-bottom: 16px; }
+  .rd-foot button { background: transparent; border: 1px solid var(--rd-accent); color: var(--rd-accent); margin: 4px; }
+  .rd-foot button.rd-primary { background: var(--rd-accent); color: var(--rd-bg1); border-color: var(--rd-accent); }
+  @media (prefers-reduced-motion: reduce) { .rd-fill { transition: none; } }
   .hide { display: none !important; }
 </style>
 </head>
@@ -215,6 +251,45 @@
   </div>
 </section>
 
+<!-- ================= READING (pop landing) ================= -->
+<section id="reading" class="hide">
+  <div class="rd-wrap">
+    <div class="rd-hero">
+      <div class="rd-sigil" id="rd_sigil"></div>
+      <div class="rd-eyebrow" style="margin-top:16px">Your word-association reading</div>
+      <h1 class="rd-name" id="rd_name"></h1>
+      <div class="rd-epithet" id="rd_epithet"></div>
+      <div class="rd-typenum" id="rd_typenum"></div>
+      <p class="rd-portrait" id="rd_portrait"></p>
+    </div>
+    <div class="rd-sec">
+      <div class="rd-eyebrow">The complexes</div>
+      <h2>What stirred beneath the words</h2>
+      <div id="rd_bars"></div>
+    </div>
+    <div class="rd-sec">
+      <div class="rd-eyebrow">Three cards</div>
+      <h2>The words that found something</h2>
+      <div class="rd-cards" id="rd_cards"></div>
+    </div>
+    <div class="rd-sec">
+      <div class="rd-eyebrow">The casting</div>
+      <h2>Your reading</h2>
+      <div class="rd-cast">
+        <div class="rd-hex" id="rd_hex"></div>
+        <div><span class="rd-castnum" id="rd_castnum"></span><p id="rd_oracle"></p></div>
+      </div>
+    </div>
+    <div class="rd-foot">
+      <div class="rd-note">A reading, not a diagnosis — drawn only from your own words and your own timing.</div>
+      <button class="rd-primary" id="rd_new">Cast again</button>
+      <button id="rd_analysis">The analyst's reading</button>
+      <button id="rd_record">The full record</button>
+      <button id="rd_export">Save my reading</button>
+    </div>
+  </div>
+</section>
+
 <!-- ================= RESULTS ================= -->
 <section id="results" class="hide">
   <div class="eyebrow">Protocol sheet</div>
@@ -241,6 +316,7 @@
     RT is shown in seconds; the export also carries milliseconds and Jung's fifths of a second.
   </p>
   <div class="actions">
+    <button id="toreading">Back to your reading</button>
     <button id="toinsights">Read the analysis</button>
     <button class="secondary" id="export">Export JSON</button>
     <button class="secondary" id="again">New session</button>
@@ -1026,6 +1102,158 @@ function buildInsights(items, A) {
   return h;
 }
 
+/* ---------------- The reading: pop landing over the same analysis ----------------
+   Deterministic mappings from the technical layers to a personality reading:
+   - 24 types = 4 houses (dominant framework layer, or the Veil when quiet)
+                x 3 temperaments (disturbance rate) x 2 modes (inner vs outer share).
+   - 6 complexes scored from theme groups + lens bonuses, shown as percentages.
+   - 128 castings = 7 binary lines from real metrics (2^7), each line shown as a
+     solid/broken bar; the reading text is fixed per casting (I-Ching style).
+   All of it is recomputable from the export; nothing is random. */
+const RD = {
+  houses: {
+    freud: { label: "House of the Deep Root", sigil: "\u{1F40D}", bg1: "#2b0a12", bg2: "#4a1224", accent: "#ff6b81", glow: "#ff8fa3",
+      portrait: "Your reading runs on the oldest fuel: appetite, memory, the family table. What moves you moves from far below the surface, and it was moving tonight." },
+    adler: { label: "House of Mirrors", sigil: "\u2694\uFE0F", bg1: "#1a1030", bg2: "#31205a", accent: "#c9a227", glow: "#b388ff",
+      portrait: "Your reading turns on standing and being seen. Somewhere in you a ledger is kept — who rose, who fell, where you stand — and tonight the ledger wrote in the margins of your answers." },
+    jung: { label: "House of the Sun", sigil: "\u2600\uFE0F", bg1: "#101b3d", bg2: "#1f2f66", accent: "#ffb703", glow: "#ffd166",
+      portrait: "Your reading reaches upward: toward the absolute, the destined, the larger-than-life. When you answered, something in you kept borrowing light from very high places." },
+    veil: { label: "House of the Veil", sigil: "\u{1F32B}\uFE0F", bg1: "#0e2226", bg2: "#173a40", accent: "#7fd8be", glow: "#a8e6cf",
+      portrait: "Your reading is written in mist. The deeper engines kept their counsel tonight — which is not emptiness, but a door held politely closed." }
+  },
+  names: {
+    freud: [["The Sleeping Volcano","Still ground, molten memory."],["The Locked Cellar","Everything kept; nothing discussed."],["The Wolf Beneath","It walks when you are not looking."],["The Midnight Appetite","Fed at odd hours, denied by day."],["The Devouring Root","What feeds you also holds you."],["The Unquiet Cradle","The first house never quite empties."]],
+    adler: [["The Velvet Armor","Soft to the touch, impossible to pierce."],["The Polished Duelist","Every mirror is an opponent."],["The Iron Understudy","Rehearsing a part already yours."],["The Applause Hunter","The room decides how you feel."],["The Throne of Thorns","You won the seat; it keeps the score."],["The Ladder in the Storm","Climbing matters more than the weather."]],
+    jung: [["The Quiet Prophet","Certain of things not yet said."],["The Borrowed Halo","It fits; it is not yours."],["The Tower Oracle","Seeing far, from very high up."],["The Gilded Kite","Bright, ascending, string unattended."],["The Star-Swallower","Hungry for what cannot be held."],["Icarus Ascendant","Magnificent, and rising anyway."]],
+    veil: [["The Still Lake","Depth without a single ripple."],["The Marble Guest","Present, polite, and unreadable."],["The Fog Walker","Moving surely through what hides you."],["The Curtained Window","Warm light, drawn drapes."],["The Storm Behind Glass","Weather sealed in perfect silence."],["The Scattered Mask","Many quick faces, none held long."]]
+  },
+  temperament: [
+    ["Still", "Your surface barely moved — a calm that is either peace or excellent security."],
+    ["Weather", "Your surface moved the way a real life moves: mostly steady, stirred in particular places."],
+    ["Storm", "Your surface moved constantly — whatever you carry sits close to the skin and speaks readily."]
+  ],
+  mode: [
+    ["Deep", "You answer from meaning: your words reach into things."],
+    ["Surface", "You answer from rhythm and habit: your words skate — quick, social, and hard to catch."]
+  ],
+  complexes: [
+    { key: "mother", label: "The Mother's Thread", themes: ["family_love","affection","care"], layer: null, parental: true },
+    { key: "shadow", label: "The Shadow", themes: ["aggression","morality"], layer: null },
+    { key: "wound", label: "The Old Wound", themes: ["pain_fear","death_illness","mood","separation"], layer: null },
+    { key: "throne", label: "The Throne", themes: ["money","judgement"], layer: "adler" },
+    { key: "halo", label: "The Halo", themes: ["fortune","decision"], layer: "jung" },
+    { key: "hunger", label: "The Hunger", themes: ["sexuality","need","body"], layer: "freud" }
+  ],
+  states: p => p >= 70 ? "burning" : p >= 40 ? "awake" : p >= 15 ? "stirring" : "dormant",
+  oracle: {
+    open: [
+      "You answered quickly over quiet water; the current beneath barely showed itself.",
+      "You answered quickly, and often the quickness was the message: speed is also a door closing.",
+      "You took your time over quiet water; your pauses were courtesies, not confessions.",
+      "You took your time, and the time went somewhere: certain words made you pay a toll before passing."
+    ],
+    mid: [
+      "Nothing silenced you and nothing clung; each word was met and released.",
+      "Nothing silenced you, yet some answers refused to leave — they trailed into the words that followed like smoke.",
+      "At least once, silence answered for you; the blank space in your record is its most honest line.",
+      "Silence took some words and echo took others; what could not be said was carried forward instead."
+    ],
+    turn: [
+      "You reach into words for their meaning, so what stirred in you stirred at depth.",
+      "You travel the surface of words, so what stirred in you stirred beneath a practiced calm."
+    ],
+    close: [
+      "The old rooms stayed locked tonight; whatever was stirred, it was not the foundations.",
+      "Above, something reached for standing or for glory; the foundations beneath it stayed quiet, biding.",
+      "The foundation spoke — appetite, family, the first house — plainly, without decoration.",
+      "The whole tower answered at once: foundation, ladder, and spire. Read this casting twice."
+    ]
+  }
+};
+function computeReading(items, A) {
+  const answered = items.filter(x => x.response);
+  const disturbed = items.filter(x => x.disturbed);
+  const rate = answered.length ? disturbed.length / answered.length : 0;
+  const ls = { freud: 0, adler: 0, jung: 0 };
+  items.forEach(it => { if (!it.framework) return; ["freud","adler","jung"].forEach(k => {
+    const e = it.framework[k]; if (e && e.source === "direct") ls[k] += it.framework.corroborated ? 2 : 1; }); });
+  const best = Object.entries(ls).sort((a, b) => b[1] - a[1])[0];
+  const house = best[1] > 0 ? best[0] : "veil";
+  const houseIdx = ["freud","adler","jung","veil"].indexOf(house);
+  const tempIdx = rate < 0.10 ? 0 : rate < 0.25 ? 1 : 2;
+  const innerShare = A.shares ? A.shares.inner : 0;
+  const surfShare = A.shares ? A.shares.outer + A.shares.clang : 0;
+  const modeIdx = innerShare >= surfShare ? 0 : 1;
+  const typeIdx = houseIdx * 6 + tempIdx * 2 + modeIdx;   // 0..23
+  const complexes = RD.complexes.map(c => {
+    const members = items.filter(it => c.themes.includes(it.theme));
+    let score = 0;
+    members.forEach(it => { score += (it.disturbed ? 2 : 0) + Math.min(it.convergence || 0, 3); });
+    if (c.layer) score += ls[c.layer];
+    if (c.parental) items.forEach(it => { const f = it.framework && it.framework.freud;
+      if (f && f.source === "direct" && f.evidence.some(e => e.indexOf("parental") === 0)) score += 2; });
+    const denom = 2.5 * Math.max(members.length, 2) + 2;
+    return { key: c.key, label: c.label, pct: Math.max(0, Math.min(96, Math.round(100 * score / denom))) };  // never total: no complex owns a person
+  });
+  const bits = [
+    A.median >= 1200 ? 1 : 0,
+    rate >= 0.15 ? 1 : 0,
+    items.some(x => x.flags.includes("NO_RESPONSE")) ? 1 : 0,
+    items.some(x => ["PERSEVERATION","REPEATS_STIMULUS","STEREOTYPY"].some(f => x.flags.includes(f))) ? 1 : 0,
+    modeIdx === 0 ? 1 : 0,
+    ls.freud > 0 ? 1 : 0,
+    (ls.jung > 0 || ls.adler > 0) ? 1 : 0
+  ];
+  const o = bits[0] * 2 + bits[1], m = bits[2] * 2 + bits[3], t = bits[4], cl = bits[5] * 2 + bits[6];
+  const casting = ((o * 4 + m) * 2 + t) * 4 + cl;   // 0..127
+  const oracle = [RD.oracle.open[o], RD.oracle.mid[m], RD.oracle.turn[t], RD.oracle.close[cl]].join(" ");
+  const signalled = [...items].filter(x => (x.convergence || 0) > 0)
+    .sort((a, b) => ((b.convergence || 0) - (a.convergence || 0)) || (b.indicatorCount - a.indicatorCount) || ((b.rtRatio || 0) - (a.rtRatio || 0)));
+  const calm = answered.filter(x => !(x.convergence > 0)).sort((a, b) => (b.relatedness || 0) - (a.relatedness || 0));
+  const cards = signalled.slice(0, 3);
+  while (cards.length < 3 && calm.length) cards.push(Object.assign(calm.shift(), { calmCard: true }));
+  return { house, houseIdx, tempIdx, modeIdx, typeIdx, complexes, bits, casting, oracle, cards, rate };
+}
+function cardInsight(it) {
+  if (it.calmCard) return "Here your waters were untroubled: the answer came clean and close. A card drawn for balance — not everything in you is weather.";
+  const bits = [];
+  if (it.rtRatio !== null && it.rtRatio >= 1.5) bits.push("you lingered " + it.rtRatio.toFixed(1) + " times longer than your usual beat");
+  if (it.flags.includes("SHORT_RT")) bits.push("the answer leapt out before thought could intervene");
+  if (it.flags.includes("NO_RESPONSE")) bits.push("no answer came at all — the loudest kind of quiet");
+  if (it.flags.includes("PERSEVERATION")) bits.push("the previous word was still holding your hand");
+  if (it.flags.includes("EGOCENTRIC")) bits.push("the word turned into a mirror");
+  if (it.flags.includes("SYMBOLIC")) bits.push("your answer belongs to this word the way a dream belongs to a day");
+  if (it.flags.includes("MULTI_WORD")) bits.push("a whole phrase rushed out where one word would do");
+  const theme = PLAIN.themes[it.theme];
+  return (bits.length ? "Here " + bits.slice(0, 2).join(", and ") + ". " : "") +
+    (theme ? theme.charAt(0).toUpperCase() + theme.slice(1) + "." : "An everyday word — so whatever it touched is yours alone, and worth a quiet minute.");
+}
+function renderReading(R) {
+  const H = RD.houses[R.house];
+  const el = $("reading");
+  el.style.setProperty("--rd-bg1", H.bg1); el.style.setProperty("--rd-bg2", H.bg2);
+  el.style.setProperty("--rd-accent", H.accent); el.style.setProperty("--rd-glow", H.glow);
+  const nm = RD.names[R.house][R.tempIdx * 2 + R.modeIdx];
+  $("rd_sigil").textContent = H.sigil;
+  $("rd_name").textContent = nm[0];
+  $("rd_epithet").textContent = nm[1];
+  $("rd_typenum").textContent = "Type " + (R.typeIdx + 1) + " of 24 \u00B7 " + H.label;
+  $("rd_portrait").innerHTML = esc(H.portrait) + " " + esc(RD.temperament[R.tempIdx][1]) + " " + esc(RD.mode[R.modeIdx][1]);
+  $("rd_bars").innerHTML = R.complexes.map(c =>
+    '<div class="rd-bar"><div class="rd-lab"><span>' + c.label + '</span><span class="rd-state">' + c.pct + '% \u00B7 ' + RD.states(c.pct) + '</span></div>' +
+    '<div class="rd-track"><div class="rd-fill" data-w="' + c.pct + '"></div></div></div>').join("");
+  $("rd_cards").innerHTML = R.cards.map(it =>
+    '<div class="rd-card"><div class="rd-stim">' + esc(it.stimulus) + '</div>' +
+    '<div class="rd-resp">' + (it.response ? '\u201C' + esc(it.response) + '\u201D' : "(silence)") + '</div>' +
+    '<p>' + esc(cardInsight(it)) + '</p></div>').join("");
+  $("rd_hex").innerHTML = R.bits.map(b =>
+    '<div class="rd-line ' + (b ? "solid" : "") + '">' + (b ? "<span></span>" : "<span></span><span></span>") + '</div>').join("");
+  $("rd_castnum").textContent = "CASTING " + (R.casting + 1) + " OF 128";
+  $("rd_oracle").textContent = R.oracle;
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    [...document.querySelectorAll("#reading .rd-fill")].forEach(f => { f.style.width = f.dataset.w + "%"; })));
+}
+
 /* Convergence: Jung read combinations, not single signs. Count how many independent
    kinds of signal touch an item - timing, form, pattern, content - and mark framework
    findings that rest on content alone as uncorroborated. */
@@ -1195,10 +1423,22 @@ async function finish() {
   });
   $('insightbody').innerHTML = buildInsights(S.items, A);
 
-  S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, scorer, classifier, reactionType: A.reactionType, dominantType: A.dominant, typeShares: A.shares, themes: A.themes, frameworks: fwSummary, config: CONFIG };
+  const R = computeReading(S.items, A);
+  renderReading(R);
+  S.reading = R;
+  $('results').classList.add('hide');
+  $('reading').classList.remove('hide');
+  window.scrollTo(0, 0);
+
+  S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, scorer, classifier, reactionType: A.reactionType, dominantType: A.dominant, typeShares: A.shares, themes: A.themes, frameworks: fwSummary, reading: S.reading ? { type: S.reading.typeIdx + 1, house: S.reading.house, casting: S.reading.casting + 1, complexes: S.reading.complexes, bits: S.reading.bits } : null, config: CONFIG };
 }
 
 $('toinsights').onclick = () => { $('results').classList.add('hide'); $('insights').classList.remove('hide'); window.scrollTo(0, 0); };
+$('toreading').onclick = () => { $('results').classList.add('hide'); $('reading').classList.remove('hide'); window.scrollTo(0, 0); };
+$('rd_record').onclick = () => { $('reading').classList.add('hide'); $('results').classList.remove('hide'); window.scrollTo(0, 0); };
+$('rd_analysis').onclick = () => { $('reading').classList.add('hide'); $('insights').classList.remove('hide'); window.scrollTo(0, 0); };
+$('rd_export').onclick = () => $('export').click();
+$('rd_new').onclick = () => location.reload();
 $('backsheet').onclick = () => { $('insights').classList.add('hide'); $('results').classList.remove('hide'); window.scrollTo(0, 0); };
 $('export').onclick = () => {
   const payload = { schema: 'jung-wat/session/v3', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, summary: S.summary, items: S.items };
