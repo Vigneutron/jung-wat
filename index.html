@@ -111,6 +111,15 @@
   .themes td.hot { color: var(--flag); }
   .legend { font-size: 13px; color: var(--graphite); line-height: 1.6; }
   .note { border-left: 2px solid var(--chrono); padding: 6px 12px; font-size: 13px; color: var(--graphite); margin: 14px 0; }
+  #ledger tr { cursor: pointer; }
+  #ledger tr.userflag td:first-child { border-left: 3px solid var(--chrono); }
+  .uf { color: var(--chrono); font-weight: 700; margin-left: 3px; }
+  .pencil { border: none; background: none; color: var(--graphite); cursor: pointer; font: 13px var(--sans); padding: 0 4px; opacity: .55; }
+  .pencil:hover { opacity: 1; background: none; color: var(--ink); }
+  .noterow input { width: 100%; margin-top: 6px; padding: 6px 8px; font: 13px var(--sans); border: 1px solid var(--rule); border-radius: 3px; }
+  .respedit { width: 100%; padding: 4px 6px; font: 15px var(--serif); border: 1px solid var(--chrono); border-radius: 3px; }
+  .sievenote { font-size: 12px; color: var(--chrono); margin-top: 3px; white-space: pre-wrap; }
+  #sievebox textarea { min-height: 180px; }
   .hide { display: none !important; }
 </style>
 </head>
@@ -208,7 +217,7 @@
   <h1 id="rtitle">Results</h1>
   <div class="stats">
     <div class="stat"><b id="s_median">–</b><span>median RT (Jung's "probable mean")</span></div>
-    <div class="stat"><b id="s_flag">–</b><span>above your median</span></div>
+    <div class="stat"><b id="s_flag">–</b><span>marked rows (timing, blanks, your flags)</span></div>
   </div>
   <div class="note" id="scorenote"></div>
   <div class="eyebrow" style="margin-top:24px">Protocol</div>
@@ -218,11 +227,25 @@
   </table>
   <hr>
   <p class="legend">
-    <b style="color:var(--flag)">Carmine</b> marks a reaction at least twice your median; a grey row is above the median (Jung's "probable mean"), which alone is weak. The ×med column is how many times the median that reaction took. A dot by the number marks a stimulus the source list treats as emotionally loaded. RT runs from the word's delivery to the onset of your answer; the export also carries milliseconds and Jung's fifths of a second. Nothing else is measured, scored, or judged — the reading of this sheet is the reader's.
+    <b style="color:var(--flag)">Carmine</b> marks a reaction at least twice your median, or a word that got no answer at all — Jung ranked outright failures among the strongest signs. A grey row is above the median (Jung's "probable mean"), which alone is weak.
+    Tap any row to flag it yourself (<span class="uf">&#10033;</span>) and note why the word mattered; tap &#9998; to fix a misheard response after the run (the original is kept). Your flags, notes, and sieve associations all travel with the export. The ×med column is how many times the median that reaction took. A dot by the number marks a stimulus the source list treats as emotionally loaded. RT runs from the word's delivery to the onset of your answer; the export also carries milliseconds and Jung's fifths of a second. Nothing else is measured, scored, or judged — the reading of this sheet is the reader's.
   </p>
   <div class="actions">
     <button id="export">Export JSON</button>
+    <button class="secondary" id="sievego">Run Associative Sieve</button>
     <button class="secondary" id="again">New session</button>
+  </div>
+</section>
+
+<!-- ================= ASSOCIATIVE SIEVE ================= -->
+<section id="sieve" class="hide">
+  <div class="eyebrow">Associative sieve · <span id="sv_pos"></span></div>
+  <h1 id="sv_word" style="font-family:var(--serif)"></h1>
+  <p class="muted">Your first answer was &ldquo;<span id="sv_first"></span>&rdquo;. No clock now. Let the word bring whatever it brings — write it all down, one association per line, and move on only when the word is empty.</p>
+  <div id="sievebox"><textarea id="sv_text" placeholder="everything this word brings up…"></textarea></div>
+  <div class="actions">
+    <button class="secondary" id="sv_prev">Previous</button>
+    <button id="sv_next">Next word</button>
   </div>
 </section>
 
@@ -474,7 +497,8 @@ function analyse(items) {
   items.forEach(it => {
     it.flags = [];
     it.rtRatio = (it.reactionMs !== null && median) ? +(it.reactionMs / median).toFixed(2) : null;
-    if (it.reactionMs !== null && it.reactionMs > rtCut) it.flags.push('LONG_RT');
+    if (!it.response) it.flags.push('NO_RESPONSE');   // a blank is a stronger sign than a slow answer
+    else if (it.reactionMs !== null && it.reactionMs > rtCut) it.flags.push('LONG_RT');
   });
   return { median, rtCut };
 }
@@ -492,6 +516,7 @@ function normalizeItem(raw, k, set) {
     index, listPosition: raw.listPosition || (set.words.indexOf(m) + 1), stimulus: raw.stimulus || m[0], stimulusPos: { N: 'noun', A: 'adjective', V: 'verb' }[m[1]], theme: m[2], loaded: !!m[3],
     response: raw.response || '', rawResponse: raw.rawResponse ?? null, corrected: !!raw.corrected, reactionMs: raw.reactionMs ?? null, reactionFifths: raw.reactionMs != null ? +fifths(raw.reactionMs) : null,
     completionMs: raw.completionMs ?? null, inputMode: raw.inputMode || 'unknown',
+    userFlag: !!raw.userFlag, userNote: raw.userNote || '', sieve: raw.sieve || '',
     rtRatio: null, flags: []
   };
 }
@@ -524,25 +549,98 @@ $('impgo').onclick = () => {
 async function finish() {
   Mic.stop();
   $('test').classList.add('hide'); $('results').classList.remove('hide');
+  renderSheet();
+}
+/* The sheet re-renders after every edit, flag, or sieve pass; measurement (carmine, grey)
+   and the reader's own judgment (starred flags, notes, sieve lines) stay visually distinct. */
+function renderSheet() {
   const A = analyse(S.items);
-  const over = S.items.filter(x => x.flags.includes('LONG_RT'));
+  const marked = S.items.filter(x => x.flags.length || x.userFlag);
   $('rtitle').textContent = `${S.subject} \u00B7 ${S.set.label}${S.shuffle ? ' \u00B7 shuffled' : ''} \u00B7 ${S.items.length} words` + (S.imported ? ` \u00B7 imported${S.imported.recordedAt ? ', recorded ' + new Date(S.imported.recordedAt).toLocaleDateString() : ''}` : '');
   $('s_median').textContent = A.median ? secs(A.median) + ' s' : '\u2013';
-  $('s_flag').textContent = `${over.length} / ${S.items.length}`;
+  $('s_flag').textContent = `${marked.length} / ${S.items.length}`;
   $('scorenote').textContent = A.median ? `Reaction times above your median (${secs(A.rtCut)} s) are marked, per Jung. The record is the measurement; the reading of it is yours.` : '';
   const tb = $('ledger'); tb.innerHTML = '';
-  S.items.forEach(it => {
+  S.items.forEach((it, k) => {
     const tr = document.createElement('tr');
-    if (it.rtRatio !== null && it.rtRatio >= 2) tr.className = 'flagged';
+    if (it.flags.includes('NO_RESPONSE') || (it.rtRatio !== null && it.rtRatio >= 2)) tr.className = 'flagged';
     else if (it.flags.includes('LONG_RT')) tr.className = 'marked';
-    tr.innerHTML = `<td class="n">${it.index}${it.loaded ? '<span class="ld" title="loaded stimulus">\u2022</span>' : ''}</td><td class="w">${it.stimulus}</td>
-      <td class="r">${it.response || '<span class="muted">\u2014</span>'}${it.corrected ? `<span class="muted" style="font-size:12px"> (heard: ${it.rawResponse})</span>` : ''}</td>
+    if (it.userFlag) tr.classList.add('userflag');
+    tr.innerHTML = `<td class="n">${it.index}${it.loaded ? '<span class="ld" title="loaded stimulus">\u2022</span>' : ''}${it.userFlag ? '<span class="uf" title="your flag">\u2731</span>' : ''}</td><td class="w">${it.stimulus}</td>
+      <td class="r"><span class="rtext">${it.response || '<span class="muted">\u2014</span>'}</span>${it.corrected ? `<span class="muted" style="font-size:12px"> (heard: ${it.rawResponse})</span>` : ''}<button class="pencil" title="fix a misheard response">\u270E</button>${it.userFlag && it.userNote ? `<div class="sievenote">\u2731 ${it.userNote}</div>` : ''}${it.sieve ? `<div class="sievenote">${it.sieve}</div>` : ''}</td>
       <td class="t">${it.reactionMs === null ? '\u2014' : secs(it.reactionMs) + ' s'}</td>
       <td class="t">${it.rtRatio === null ? '\u2014' : it.rtRatio.toFixed(1)}</td>`;
+    // tap the row to flag it and say why; the pencil and inputs do their own thing
+    tr.addEventListener('click', e => {
+      if (e.target.closest('.pencil') || e.target.closest('input') || e.target.closest('.respedit')) return;
+      if (!it.userFlag) {
+        it.userFlag = true;
+        renderSheet();
+        const row = $('ledger').children[k], cell = row.querySelector('.r');
+        const div = document.createElement('div'); div.className = 'noterow';
+        const inp = document.createElement('input'); inp.placeholder = 'why this word mattered (optional)'; inp.value = it.userNote || '';
+        div.appendChild(inp); cell.appendChild(div); inp.focus();
+        const commit = () => { it.userNote = inp.value.trim(); renderSheet(); };
+        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); commit(); } ev.stopPropagation(); });
+        inp.addEventListener('blur', commit);
+        inp.addEventListener('click', ev => ev.stopPropagation());
+      } else { it.userFlag = false; it.userNote = ''; renderSheet(); }
+    });
+    tr.querySelector('.pencil').addEventListener('click', e => {
+      e.stopPropagation();
+      const cell = tr.querySelector('.rtext');
+      const inp = document.createElement('input'); inp.className = 'respedit'; inp.value = it.response || '';
+      cell.replaceWith(inp); inp.focus(); inp.select();
+      const commit = () => {
+        const v = inp.value.trim();
+        if (v !== it.response) {
+          if (it.rawResponse === null || it.rawResponse === undefined) it.rawResponse = it.response;
+          it.response = v; it.corrected = true;
+        }
+        renderSheet();
+      };
+      inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); commit(); } if (ev.key === 'Escape') renderSheet(); ev.stopPropagation(); });
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('click', ev => ev.stopPropagation());
+    });
     tb.appendChild(tr);
   });
   S.summary = { medianMs: A.median, rtCutoffMs: A.rtCut, config: CONFIG };
 }
+
+/* ---------------- Associative sieve: the flagged words, without the clock ----------------
+   Takes the words the sheet marked (your flags first, then carmine: blanks and >=2x median;
+   if none, everything above the median) into a screen with no timer. One word at a time,
+   free association for as long as it takes, advanced by hand. Lines are saved on the item
+   as `sieve` and travel with the export. */
+function sieveList() {
+  const strong = S.items.filter(x => x.userFlag || x.flags.includes('NO_RESPONSE') || (x.rtRatio !== null && x.rtRatio >= 2));
+  return strong.length ? strong : S.items.filter(x => x.flags.includes('LONG_RT'));
+}
+function sieveShow() {
+  const it = S.sieveItems[S.sieveIdx];
+  $('sv_pos').textContent = `${S.sieveIdx + 1} / ${S.sieveItems.length}`;
+  $('sv_word').textContent = it.stimulus;
+  $('sv_first').textContent = it.response || '\u2014';
+  $('sv_text').value = it.sieve || '';
+  $('sv_prev').disabled = S.sieveIdx === 0;
+  $('sv_next').textContent = S.sieveIdx === S.sieveItems.length - 1 ? 'Back to the sheet' : 'Next word';
+  $('sv_text').focus();
+}
+function sieveSave() { S.sieveItems[S.sieveIdx].sieve = $('sv_text').value.trim(); }
+$('sievego').onclick = () => {
+  S.sieveItems = sieveList();
+  if (!S.sieveItems.length) { $('scorenote').textContent = 'Nothing is flagged \u2014 tap the rows that mattered, then run the sieve.'; return; }
+  S.sieveIdx = 0;
+  $('results').classList.add('hide'); $('sieve').classList.remove('hide');
+  sieveShow(); window.scrollTo(0, 0);
+};
+$('sv_next').onclick = () => {
+  sieveSave();
+  if (S.sieveIdx >= S.sieveItems.length - 1) { $('sieve').classList.add('hide'); $('results').classList.remove('hide'); renderSheet(); window.scrollTo(0, 0); return; }
+  S.sieveIdx++; sieveShow();
+};
+$('sv_prev').onclick = () => { sieveSave(); if (S.sieveIdx > 0) { S.sieveIdx--; sieveShow(); } };
 
 $('export').onclick = () => {
   const payload = { schema: 'jung-wat/session/v4', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, summary: S.summary, items: S.items };
