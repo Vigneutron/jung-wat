@@ -120,6 +120,10 @@
   .respedit { width: 100%; padding: 4px 6px; font: 15px var(--serif); border: 1px solid var(--chrono); border-radius: 3px; }
   .sievenote { font-size: 12px; color: var(--chrono); margin-top: 3px; white-space: pre-wrap; }
   #sievebox textarea { min-height: 180px; }
+  .pickrow { display: flex; gap: 10px; align-items: baseline; padding: 8px 4px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+  .pickrow input { width: auto; margin: 0; }
+  .pickrow .w { font: 600 16px var(--serif); }
+  .pickrow .why { margin-left: auto; font-size: 12px; color: var(--graphite); text-align: right; }
   .hide { display: none !important; }
 </style>
 </head>
@@ -152,7 +156,13 @@
       <select id="count"></select>
     </label>
   </div>
-  <label class="check"><input type="checkbox" id="speak" checked> Read each word aloud (Jung spoke the stimulus)</label>
+  <label class="field" style="margin-top:12px">Word presentation
+    <select id="present">
+      <option value="both">Shown and spoken (Jung read the word aloud)</option>
+      <option value="spoken">Spoken only — the word never appears on screen</option>
+      <option value="written">Shown only — silent</option>
+    </select>
+  </label>
   <label class="check"><input type="checkbox" id="autoadvance" checked> Advance automatically after a response</label>
   <label class="check"><input type="checkbox" id="shuffle"> Shuffle the order <span class="muted">(the published order is part of the method)</span></label>
   <div id="miccap" class="note hide">Speech recognition isn't available here. If this page is embedded in a chat, open the file directly in Chrome or Safari to use the microphone. Typing mode works everywhere.</div>
@@ -239,6 +249,18 @@
 
 <!-- ================= ASSOCIATIVE SIEVE ================= -->
 <section id="sieve" class="hide">
+  <div id="sv_pick">
+    <div class="eyebrow">Associative sieve · choose the words</div>
+    <h1 style="font-family:var(--serif)">Which words go under the sieve?</h1>
+    <p class="muted">Every marked row from the sheet is listed. Your own flags, blanks, and reactions at twice your median start checked; rows merely above the median start unchecked. Take only the words that pull at you — the sieve rewards depth over coverage.</p>
+    <div id="sv_list"></div>
+    <div class="actions">
+      <button id="sv_begin">Begin the sieve</button>
+      <button class="secondary" id="sv_back">Back to the sheet</button>
+    </div>
+    <div id="sv_pickerr" class="note hide">Tick at least one word first.</div>
+  </div>
+  <div id="sv_run" class="hide">
   <div class="eyebrow">Associative sieve · <span id="sv_pos"></span></div>
   <h1 id="sv_word" style="font-family:var(--serif)"></h1>
   <p class="muted">Your first answer was &ldquo;<span id="sv_first"></span>&rdquo;. No clock now. Let the word bring whatever it brings — write it all down, one association per line, and move on only when the word is empty.</p>
@@ -246,6 +268,7 @@
   <div class="actions">
     <button class="secondary" id="sv_prev">Previous</button>
     <button id="sv_next">Next word</button>
+  </div>
   </div>
 </section>
 
@@ -294,7 +317,10 @@ function refreshSet() {
 $('set').onchange = refreshSet; refreshSet();
 
 $('start').onclick = () => {
-  S.mode = $('mode').value; S.speak = $('speak').checked; S.auto = $('autoadvance').checked;
+  S.mode = $('mode').value; S.auto = $('autoadvance').checked;
+  S.presentMode = $('present').value;
+  if (S.presentMode !== 'written' && !('speechSynthesis' in window)) S.presentMode = 'written';
+  S.speak = S.presentMode !== 'written'; S.showWord = S.presentMode !== 'spoken';
   S.subject = $('subject').value.trim() || 'S';
   S.set = setById($('set').value); S.shuffle = $('shuffle').checked;
   S.list = buildList(S.set, S.shuffle, +$('count').value);
@@ -307,7 +333,7 @@ $('start').onclick = () => {
   $('micnote').classList.toggle('hide', S.mode === 'type'); $('go').textContent = S.mode === 'mic' ? 'Open microphone and begin' : 'Show first word';
   if (S.mode === 'type') { $('micpane').classList.add('hide'); $('typepane').classList.remove('hide'); }
   else { $('micpane').classList.remove('hide'); $('typepane').classList.add('hide'); }
-  if (S.speak && 'speechSynthesis' in window) speechSynthesis.getVoices();
+  if ($('present').value !== 'written' && 'speechSynthesis' in window) speechSynthesis.getVoices();
 };
 
 $('go').onclick = async () => {
@@ -326,20 +352,30 @@ function present() {
   const w = S.list[S.i].w;
   $('pos').textContent = `${S.i + 1} / ${S.n}`;
   $('bar').style.width = (S.i / S.n * 100) + '%';
-  $('word').textContent = w; $('word').classList.add('hidden');
+  // spoken-only shows a listening mark instead of the word; the correction strip
+  // still names the word after the answer, as Jung's experimenter would have
+  $('word').textContent = S.showWord ? w : '\u00B7 \u00B7 \u00B7'; $('word').classList.add('hidden');
   $('heard').textContent = ''; $('heard').classList.remove('interim');
   $('typed').value = ''; document.querySelector('.chrono').classList.remove('stopped'); setChrono(0);
   S.firstInputAt = null; S.interim = '';
 
   if (S.speak && 'speechSynthesis' in window) {
     const u = new SpeechSynthesisUtterance(w); u.rate = 0.95; u.lang = 'en-US';
-    let started = false;
+    let started = false, armed = false;
+    const trial = S.i;
     S.ignoreUntil = Infinity;
-    u.onstart = () => { started = true; $('word').classList.remove('hidden'); startClock(); };
-    u.onend = () => { S.ignoreUntil = performance.now() + 250; if (!started) { $('word').classList.remove('hidden'); startClock(); } };
-    u.onerror = u.onend;
+    const reveal = rescue => { if (rescue && !S.showWord) $('word').textContent = w; $('word').classList.remove('hidden'); };
+    // arm() is the only exit from the muted state. iOS Safari loses utterance events
+    // (especially after cancel()), which would leave the mic deaf for the rest of the
+    // session; two watchdogs guarantee it runs, and the trial guard keeps a stale timer
+    // from unmuting during the next word's utterance. If speech never played at all,
+    // the word is shown even in spoken-only mode - a silent blank screen is no trial.
+    const arm = () => { if (armed || S.i !== trial) return; armed = true; S.ignoreUntil = performance.now() + 250; if (!S.t0) { reveal(!started); startClock(); } };
+    u.onstart = () => { started = true; reveal(false); startClock(); };
+    u.onend = arm; u.onerror = arm;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
-    setTimeout(() => { if (!started && !S.t0) u.onend(); }, 800);
+    setTimeout(() => { if (!started) arm(); }, 800);
+    setTimeout(arm, 3000);
   } else {
     setTimeout(() => { S.ignoreUntil = 0; $('word').classList.remove('hidden'); startClock(); }, 400);
   }
@@ -527,7 +563,7 @@ async function importSession(text) {
   if (!payload || !Array.isArray(payload.items) || !String(payload.schema || '').startsWith('jung-wat/session/')) {
     err.textContent = 'This file is not a session export (expected schema jung-wat/session/…).'; err.classList.remove('hide'); return;
   }
-  S.subject = payload.subject || 'imported'; S.mode = payload.inputMode || 'unknown'; S.speak = !!payload.spokenStimulus;
+  S.subject = payload.subject || 'imported'; S.mode = payload.inputMode || 'unknown'; S.speak = !!payload.spokenStimulus; S.presentMode = payload.presentation || (payload.spokenStimulus ? 'both' : 'written');
   S.set = setById(payload.set || 'jung1910'); S.shuffle = !!payload.shuffled;
   S.items = payload.items.map((r, k) => normalizeItem(r, k, S.set)); S.i = S.items.length; S.n = S.items.length;
   S.imported = { recordedAt: payload.recordedAt, schema: payload.schema };
@@ -613,10 +649,16 @@ function renderSheet() {
    if none, everything above the median) into a screen with no timer. One word at a time,
    free association for as long as it takes, advanced by hand. Lines are saved on the item
    as `sieve` and travel with the export. */
-function sieveList() {
-  const strong = S.items.filter(x => x.userFlag || x.flags.includes('NO_RESPONSE') || (x.rtRatio !== null && x.rtRatio >= 2));
-  return strong.length ? strong : S.items.filter(x => x.flags.includes('LONG_RT'));
+function sieveCandidates() { return S.items.filter(x => x.userFlag || x.flags.length); }
+function sieveWhy(it) {
+  const r = [];
+  if (it.userFlag) r.push('\u2731 your flag');
+  if (it.flags.includes('NO_RESPONSE')) r.push('no answer');
+  else if (it.rtRatio !== null && it.rtRatio >= 2) r.push(it.rtRatio.toFixed(1) + '\u00D7 median');
+  else if (it.flags.includes('LONG_RT')) r.push('above median');
+  return r.join(' \u00B7 ');
 }
+function sievePrechecked(it) { return it.userFlag || it.flags.includes('NO_RESPONSE') || (it.rtRatio !== null && it.rtRatio >= 2); }
 function sieveShow() {
   const it = S.sieveItems[S.sieveIdx];
   $('sv_pos').textContent = `${S.sieveIdx + 1} / ${S.sieveItems.length}`;
@@ -629,12 +671,31 @@ function sieveShow() {
 }
 function sieveSave() { S.sieveItems[S.sieveIdx].sieve = $('sv_text').value.trim(); }
 $('sievego').onclick = () => {
-  S.sieveItems = sieveList();
-  if (!S.sieveItems.length) { $('scorenote').textContent = 'Nothing is flagged \u2014 tap the rows that mattered, then run the sieve.'; return; }
-  S.sieveIdx = 0;
+  const cand = sieveCandidates();
+  if (!cand.length) { $('scorenote').textContent = 'Nothing is marked \u2014 tap the rows that mattered, then run the sieve.'; return; }
+  const list = $('sv_list'); list.innerHTML = ''; $('sv_pickerr').classList.add('hide');
+  cand.forEach(it => {
+    const row = document.createElement('label'); row.className = 'pickrow';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = sievePrechecked(it);
+    row.appendChild(cb);
+    const w = document.createElement('span'); w.className = 'w'; w.textContent = it.stimulus; row.appendChild(w);
+    const r = document.createElement('span'); r.className = 'muted'; r.textContent = it.response ? '\u201C' + it.response + '\u201D' : '\u2014'; row.appendChild(r);
+    const why = document.createElement('span'); why.className = 'why'; why.textContent = sieveWhy(it); row.appendChild(why);
+    row._item = it;
+    list.appendChild(row);
+  });
   $('results').classList.add('hide'); $('sieve').classList.remove('hide');
+  $('sv_pick').classList.remove('hide'); $('sv_run').classList.add('hide');
+  window.scrollTo(0, 0);
+};
+$('sv_begin').onclick = () => {
+  const chosen = [...$('sv_list').children].filter(r => r.querySelector('input').checked).map(r => r._item);
+  if (!chosen.length) { $('sv_pickerr').classList.remove('hide'); return; }
+  S.sieveItems = chosen; S.sieveIdx = 0;
+  $('sv_pick').classList.add('hide'); $('sv_run').classList.remove('hide');
   sieveShow(); window.scrollTo(0, 0);
 };
+$('sv_back').onclick = () => { $('sieve').classList.add('hide'); $('results').classList.remove('hide'); window.scrollTo(0, 0); };
 $('sv_next').onclick = () => {
   sieveSave();
   if (S.sieveIdx >= S.sieveItems.length - 1) { $('sieve').classList.add('hide'); $('results').classList.remove('hide'); renderSheet(); window.scrollTo(0, 0); return; }
@@ -643,7 +704,7 @@ $('sv_next').onclick = () => {
 $('sv_prev').onclick = () => { sieveSave(); if (S.sieveIdx > 0) { S.sieveIdx--; sieveShow(); } };
 
 $('export').onclick = () => {
-  const payload = { schema: 'jung-wat/session/v4', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, summary: S.summary, items: S.items };
+  const payload = { schema: 'jung-wat/session/v4', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, presentation: S.presentMode || 'both', summary: S.summary, items: S.items };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wat_${S.subject}_${Date.now()}.json`; a.click();
 };
