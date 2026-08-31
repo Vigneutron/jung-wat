@@ -14,10 +14,9 @@ jobs:
         run: |
           set -euo pipefail
           urls=(
-            "https://commons.wikimedia.org/wiki/Special:FilePath/Carl%20Gustav%20Jung%2C%20full-length%20portrait%2C%20standing%20in%20front%20of%20building%20at%20Clark%20University%20LCCN2004735373.jpg"
-            "https://commons.wikimedia.org/wiki/Special:FilePath/CGJung.jpg"
             "https://commons.wikimedia.org/wiki/Special:FilePath/Jung%201910-rotated.jpg"
-            "https://commons.wikimedia.org/wiki/Special:FilePath/Carl%20Jung%20(1912).png"
+            "https://commons.wikimedia.org/wiki/Special:FilePath/Carl%20Gustav%20Jung%20(1912).png"
+            "https://commons.wikimedia.org/wiki/Special:FilePath/CGJung.jpg"
           )
           ok=""
           for u in "${urls[@]}"; do
@@ -27,11 +26,19 @@ jobs:
           done
           if [ -z "$ok" ]; then echo "::error::no candidate URL worked"; exit 1; fi
           echo "downloaded: $ok"
-          file raw.img && identify raw.img | head -1
+          file raw.img
+          pip install -q pillow
           mkdir -p assets
-          convert raw.img -auto-orient -resize 900x900 -colorspace Gray -strip -quality 62 assets/jung.jpg
-          identify assets/jung.jpg && ls -la assets/
+          python3 - <<'PY'
+          from PIL import Image
+          im = Image.open('raw.img').convert('L')
+          im.thumbnail((900, 900))
+          im.save('assets/jung.jpg', 'JPEG', quality=62, optimize=True)
+          import os
+          print('saved', im.size, os.path.getsize('assets/jung.jpg'), 'bytes')
+          PY
           echo "$ok" > assets/jung-source.txt
+          ls -la assets/
       - name: Commit
         run: |
           git config user.name deploy
