@@ -263,7 +263,7 @@
   <div id="sv_run" class="hide">
   <div class="eyebrow">Associative sieve · <span id="sv_pos"></span></div>
   <h1 id="sv_word" style="font-family:var(--serif)"></h1>
-  <p class="muted">Your first answer was &ldquo;<span id="sv_first"></span>&rdquo;. No clock now. Let the word bring whatever it brings — write it all down, one association per line, and move on only when the word is empty.</p>
+  <p class="muted">Your first answer was &ldquo;<span id="sv_first"></span>&rdquo;. No clock now. Let the word bring whatever it brings — write it all down, one association per line, and move on only when the word is empty. <button class="quiet" id="sv_say" type="button">&#128266; Say the word</button></p>
   <div id="sievebox"><textarea id="sv_text" placeholder="everything this word brings up…"></textarea></div>
   <div class="actions">
     <button class="secondary" id="sv_prev">Previous</button>
@@ -659,6 +659,12 @@ function sieveWhy(it) {
   return r.join(' \u00B7 ');
 }
 function sievePrechecked(it) { return it.userFlag || it.flags.includes('NO_RESPONSE') || (it.rtRatio !== null && it.rtRatio >= 2); }
+function sieveSpeak() {
+  if (!('speechSynthesis' in window) || !S.sieveItems) return;
+  const u = new SpeechSynthesisUtterance(S.sieveItems[S.sieveIdx].stimulus);
+  u.rate = 0.95; u.lang = 'en-US';
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
 function sieveShow() {
   const it = S.sieveItems[S.sieveIdx];
   $('sv_pos').textContent = `${S.sieveIdx + 1} / ${S.sieveItems.length}`;
@@ -667,6 +673,9 @@ function sieveShow() {
   $('sv_text').value = it.sieve || '';
   $('sv_prev').disabled = S.sieveIdx === 0;
   $('sv_next').textContent = S.sieveIdx === S.sieveItems.length - 1 ? 'Back to the sheet' : 'Next word';
+  $('sv_say').classList.toggle('hide', !('speechSynthesis' in window));
+  // the sieve presents the word the way the run did: spoken sessions hear it, silent ones read it
+  if (S.presentMode !== 'written') sieveSpeak();
   $('sv_text').focus();
 }
 function sieveSave() { S.sieveItems[S.sieveIdx].sieve = $('sv_text').value.trim(); }
@@ -696,6 +705,7 @@ $('sv_begin').onclick = () => {
   sieveShow(); window.scrollTo(0, 0);
 };
 $('sv_back').onclick = () => { $('sieve').classList.add('hide'); $('results').classList.remove('hide'); window.scrollTo(0, 0); };
+$('sv_say').onclick = sieveSpeak;
 $('sv_next').onclick = () => {
   sieveSave();
   if (S.sieveIdx >= S.sieveItems.length - 1) { $('sieve').classList.add('hide'); $('results').classList.remove('hide'); renderSheet(); window.scrollTo(0, 0); return; }
