@@ -339,8 +339,8 @@
   .uf { color: var(--chrono); font-weight: 700; margin-left: 3px; }
   .legend { font-size: 13px; line-height: 1.7; color: var(--graphite); max-width: 68ch; }
   .pencil {
-    border: none; background: none; color: var(--faint); cursor: pointer;
-    font: 13px var(--sans); padding: 0 5px; opacity: .5; box-shadow: none;
+    border: none; background: none; color: var(--chrono); cursor: pointer;
+    font: 20px/1 var(--sans); padding: 0 6px; opacity: .8; box-shadow: none; vertical-align: -2px;
     transition: opacity .15s ease, color .15s ease;
   }
   .pencil:hover { opacity: 1; background: none; color: var(--chrono); box-shadow: none; transform: none; }
@@ -417,9 +417,9 @@
   <div class="card">
     <div class="eyebrow">Before you begin</div>
     <h1>A hundred words, one answer each</h1>
-    <p>Each word will be shown to you, spoken to you, or both. Answer with the <b>first single word</b> that comes to mind, as fast as you can, without weighing or choosing. Jung's instruction to his subjects was exactly this: <i>do not deliberate.</i> In other words, don't overthink it.</p>
+    <p>Each word will be shown to you, spoken to you, or both. Answer with the <b>first thing that comes to mind</b>, as fast as you can, without weighing or choosing. Jung's instruction to his subjects was exactly this: <i>do not deliberate.</i> In other words, don't overthink it.</p>
     <p>Take the test in a <b>quiet, relaxed place</b>, sitting comfortably, with a few undisturbed minutes ahead of you.</p>
-    <p>Using the microphone? If speech recognition gets a word wrong, <b>don't worry about correcting it in the moment</b>. Every response can be fixed after the test is over, right on the protocol sheet. Your rhythm matters more than a clean transcript.</p>
+    <p>Using the microphone? If speech recognition gets a word wrong, <b>don't worry about correcting it in the moment</b>. Alternative readings of what you said pop up underneath the next word, so a quick tap fixes it if the right one is there. And every response can be edited after the test is over, right on the protocol sheet. Your rhythm matters more than a clean transcript.</p>
     <div class="actions"><button id="introgo">Continue</button></div>
   </div>
   <div class="credit">C. G. Jung, 1910 · Wikimedia Commons, public domain</div>
@@ -428,7 +428,7 @@
 <section id="setup" class="hide">
   <div class="eyebrow">Jung's word association test</div>
   <h1>Word association</h1>
-  <p class="lede">One hundred words, in Jung's original order. Answer each with the first word that comes to mind. Your reaction time is recorded to the millisecond, and also in Jung's fifths of a second. <a href="#" id="instructions">Read the instructions again</a></p>
+  <p class="lede">One hundred words, in Jung's original order. Your reaction time is recorded to the millisecond. <a href="#" id="instructions">Read the instructions again</a></p>
 
   <div class="panel">
     <div class="panel-title">Your test</div>
@@ -459,14 +459,15 @@
     <label class="field" style="margin-top:0">How you'll get each word
       <select id="present">
         <option value="both">Shown and read aloud (the way Jung did it)</option>
-        <option value="spoken">Read aloud only — never shown on screen</option>
-        <option value="written">Shown only — no sound</option>
+        <option value="spoken">Read aloud only, never shown on screen</option>
+        <option value="written">Shown only, no sound</option>
       </select>
     </label>
     <label class="field" id="voicefield">Who reads the words
       <select id="voice"></select>
     </label>
     <p class="muted" id="voicenote" style="margin-top:8px"></p>
+    <button class="quiet" id="voicetest" type="button" style="margin-top:2px">&#128266; Hear this voice</button>
     <label class="check"><input type="checkbox" id="autoadvance" checked> <span>Move to the next word automatically</span></label>
     <label class="check"><input type="checkbox" id="shuffle"> <span>Shuffle the order <span class="muted">— the published order is part of the method</span></span></label>
   </div>
@@ -501,7 +502,7 @@
   <div id="ready" class="readystate">
     <div class="stimulus">Ready.</div>
     <p class="muted">Say or type the first word that comes to mind. Don't think it over.</p>
-      <p class="muted" id="micnote">The microphone turns on once and stays on until the test ends. If the words are read aloud, headphones keep the speaker out of the recording.</p>
+      <p class="muted" id="micnote">The microphone turns on once and stays on until the test ends. If the words are read aloud, headphones keep the speaker out of the recording. If a word is misheard, alternative readings appear under the next word; tap the right one, or fix it on the sheet afterwards.</p>
     <div class="actions" style="justify-content:center"><button id="go">Show the first word</button></div>
   </div>
 
@@ -532,6 +533,15 @@
   </div>
 </section>
 
+<!-- ================= PREVIEW: what the marks on the sheet mean ================= -->
+<section id="preview" class="hide">
+  <div class="eyebrow">Before the sheet</div>
+  <h1>Two kinds of marks</h1>
+  <p class="lede">On the next page some words are <b>marked by the computer</b>. It looks at one thing only: time. A reaction noticeably slower than your own usual pace, or no answer at all, is marked as a possible sign of a complex at work. The comparison is with your own reactions in this test, nothing else.</p>
+  <p class="lede">The other marks are <b>yours</b>. Tap any row to flag a word from your own read of the test: what stirred something, what you answered too quickly, what you would rather not have been asked. That reading draws on an interpretive, psychodynamic skill the timing alone cannot offer. It is the part of the method Jung never handed to an instrument.</p>
+  <div class="actions"><button id="previewgo">See the protocol sheet</button></div>
+</section>
+
 <!-- ================= RESULTS ================= -->
 <section id="results" class="hide">
   <div class="eyebrow">Protocol sheet</div>
@@ -541,19 +551,22 @@
     <div class="stat"><b id="s_flag">–</b><span>marked rows (timing, blanks, your flags)</span></div>
   </div>
   <div class="note" id="scorenote"></div>
+  <p class="legend">
+    Tap any row to flag it yourself (<span class="uf">&#10033;</span>) and note why the word mattered. Tap the <span class="pencil" style="cursor:default;padding:0 2px;opacity:1">&#9998;</span> pencil to fix a misheard response; the original is kept and the timing is untouched. RT runs from the word's delivery to the onset of your answer; the saved file also carries milliseconds and Jung's fifths of a second. Your flags, notes, and sieve associations all travel with the saved file. Nothing else is measured, scored, or judged. The reading of this sheet is the reader's.
+  </p>
+  <label class="check" style="max-width:68ch"><input type="checkbox" id="clinician"> <span>Clinician setting: mark the stimuli the source list treats as emotionally loaded</span></label>
   <div class="eyebrow" style="margin-top:28px">Protocol</div>
   <div class="sheet-wrap">
     <table>
-      <thead><tr><th>#</th><th>Stimulus</th><th>Response</th><th>RT</th><th>×med</th></tr></thead>
+      <thead><tr><th>#</th><th>Stimulus</th><th>Response</th><th>RT</th></tr></thead>
       <tbody id="ledger"></tbody>
     </table>
   </div>
   <hr>
-  <p class="legend">
-    Tap any row to flag it yourself (<span class="uf">&#10033;</span>) and note why the word mattered; tap &#9998; to fix a misheard response after the run (the original is kept). Your flags, notes, and sieve associations all travel with the saved file. The ×med column is how many times the median that reaction took. A dot by the number marks a stimulus the source list treats as emotionally loaded. RT runs from the word's delivery to the onset of your answer; the export also carries milliseconds and Jung's fifths of a second. Nothing else is measured, scored, or judged — the reading of this sheet is the reader's.
-  </p>
   <div class="actions">
     <button id="export">Save results</button>
+    <button class="secondary" id="exportcsv">Save as CSV</button>
+    <button class="secondary" id="exportxlsx">Save as Excel</button>
     <button class="secondary" id="sievego">Run Associative Sieve</button>
     <button class="secondary" id="again">Start a new test</button>
   </div>
@@ -564,7 +577,7 @@
   <div id="sv_pick">
     <div class="eyebrow">Associative sieve · choose the words</div>
     <h1>Which words go under the sieve?</h1>
-    <p class="muted">Every marked row from the sheet is listed. Your own flags, blanks, and reactions at twice your median start checked; rows merely above the median start unchecked. Take only the words that pull at you — the sieve rewards depth over coverage.</p>
+    <p class="muted">Every marked row from the sheet is listed. Your own flags, blanks, and reactions at twice your median start checked; rows marked on timing alone start unchecked. Take only the words that pull at you — the sieve rewards depth over coverage.</p>
     <div id="sv_list"></div>
     <div class="actions">
       <button id="sv_begin">Begin the sieve</button>
@@ -594,7 +607,7 @@
    Stimulus sets: see shared/stimulus_sets.json (five sets, each word tagged pos/theme/loaded).
    In the Claude Code build, import from shared/ instead of inlining.
 ------------------------------------------------------------------- */
-const SETS = {"themes":{"death_illness":"death & illness","money":"money","morality":"morality & conscience","affection":"affection & friendship","aggression":"anger & aggression","pain_fear":"pain, fear & anxiety","family_love":"family, marriage & sexuality","mood":"mood","judgement":"judgement of others","separation":"separation","need":"need & hunger","care":"care & responsibility","decision":"choice","fortune":"luck","age":"age","body":"body","colour":"colour","nature":"nature","activity":"activity","quality":"quality","object":"object","home":"home","domestic":"domestic","speech":"speech","sensation":"sensation","place":"place","travel":"travel","food":"food","animal":"animal","time":"time","sexuality":"sexuality"},"sets":[{"id":"jung1910","label":"Jung (1910)","authors":"C. G. Jung","year":1910,"n":100,"source":"The Association Method, Clark lectures 1909, publ. 1910; English rendering of the Zurich list.","note":"Order is part of the method. 'to cook' appears twice (11, 20) in the published list.","explicit":false,"words":[["head","N","body",0],["green","A","colour",0],["water","N","nature",0],["to sing","V","activity",0],["dead","A","death_illness",1],["long","A","quality",0],["ship","N","object",0],["to pay","V","money",1],["window","N","home",0],["friendly","A","affection",1],["to cook","V","domestic",0],["to ask","V","speech",0],["cold","A","sensation",0],["stem","N","nature",0],["to dance","V","activity",0],["village","N","place",0],["lake","N","nature",0],["sick","A","death_illness",1],["pride","N","morality",1],["to cook","V","domestic",0],["ink","N","object",0],["angry","A","aggression",1],["needle","N","object",0],["to swim","V","activity",0],["voyage","N","travel",0],["blue","A","colour",0],["lamp","N","home",0],["to sin","V","morality",1],["bread","N","food",0],["rich","A","money",1],["tree","N","nature",0],["to prick","V","pain_fear",1],["pity","N","affection",1],["yellow","A","colour",0],["mountain","N","nature",0],["to die","V","death_illness",1],["salt","N","food",0],["new","A","quality",0],["custom","N","morality",0],["to pray","V","morality",1],["money","N","money",1],["foolish","A","judgement",1],["pamphlet","N","object",0],["despise","V","aggression",1],["finger","N","body",0],["expensive","A","money",1],["bird","N","animal",0],["to fall","V","pain_fear",1],["book","N","object",0],["unjust","A","morality",1],["frog","N","animal",0],["to part","V","separation",1],["hunger","N","need",1],["white","A","colour",0],["child","N","family_love",1],["to take care","V","care",1],["lead pencil","N","object",0],["sad","A","mood",1],["plum","N","food",0],["to marry","V","family_love",1],["house","N","home",0],["dear","A","affection",1],["glass","N","object",0],["to quarrel","V","aggression",1],["fur","N","object",0],["big","A","quality",0],["carrot","N","food",0],["to paint","V","activity",0],["part","N","quality",0],["old","A","age",1],["flower","N","nature",0],["to beat","V","aggression",1],["box","N","object",0],["wild","A","quality",1],["family","N","family_love",1],["to wash","V","domestic",0],["cow","N","animal",0],["friend","N","affection",1],["luck","N","fortune",1],["lie","N","morality",1],["deportment","N","morality",1],["narrow","A","quality",0],["brother","N","family_love",1],["to fear","V","pain_fear",1],["stork","N","family_love",1],["false","A","morality",1],["anxiety","N","pain_fear",1],["to kiss","V","family_love",1],["bride","N","family_love",1],["pure","A","morality",1],["door","N","home",0],["to choose","V","decision",1],["hay","N","nature",0],["contented","A","mood",1],["ridicule","N","aggression",1],["to sleep","V","body",0],["month","N","time",0],["nice","A","judgement",1],["woman","N","family_love",1],["to abuse","V","aggression",1]]},{"id":"jung1910-critical","label":"Jung (1910), critical words only","authors":"C. G. Jung","year":1910,"n":48,"source":"Subset of the 1910 list: the emotionally loaded stimuli, in original relative order.","note":"Our selection of the loaded words (48). No neutral buffers, so expect higher baseline disturbance.","explicit":false,"words":[["dead","A","death_illness",1],["to pay","V","money",1],["friendly","A","affection",1],["sick","A","death_illness",1],["pride","N","morality",1],["angry","A","aggression",1],["to sin","V","morality",1],["rich","A","money",1],["to prick","V","pain_fear",1],["pity","N","affection",1],["to die","V","death_illness",1],["to pray","V","morality",1],["money","N","money",1],["foolish","A","judgement",1],["despise","V","aggression",1],["expensive","A","money",1],["to fall","V","pain_fear",1],["unjust","A","morality",1],["to part","V","separation",1],["hunger","N","need",1],["child","N","family_love",1],["to take care","V","care",1],["sad","A","mood",1],["to marry","V","family_love",1],["dear","A","affection",1],["to quarrel","V","aggression",1],["old","A","age",1],["to beat","V","aggression",1],["wild","A","quality",1],["family","N","family_love",1],["friend","N","affection",1],["luck","N","fortune",1],["lie","N","morality",1],["deportment","N","morality",1],["brother","N","family_love",1],["to fear","V","pain_fear",1],["stork","N","family_love",1],["false","A","morality",1],["anxiety","N","pain_fear",1],["to kiss","V","family_love",1],["bride","N","family_love",1],["pure","A","morality",1],["to choose","V","decision",1],["contented","A","mood",1],["ridicule","N","aggression",1],["nice","A","judgement",1],["woman","N","family_love",1],["to abuse","V","aggression",1]]},{"id":"jung1910-modern","label":"Jung (1910), modern English","authors":"C. G. Jung, adapted","year":1910,"n":100,"source":"Same slots, part of speech, and themes as the 1910 list; dated words replaced.","note":"Replacements: stem\u2192branch, voyage\u2192journey, pamphlet\u2192leaflet, lead pencil\u2192pencil, deportment\u2192behavior, stork\u2192baby, custom\u2192habit, hay\u2192grass, plum\u2192apple, fur\u2192coat, pity\u2192sympathy, to prick\u2192to sting, contented\u2192satisfied, ridicule\u2192mockery, to part\u2192to leave, to take care\u2192to look after, to abuse\u2192to insult, to beat\u2192to hit, foolish\u2192stupid, unjust\u2192unfair, village\u2192town, dear\u2192loving, second 'to cook'\u2192'to bake'.","explicit":false,"words":[["head","N","body",0],["green","A","colour",0],["water","N","nature",0],["to sing","V","activity",0],["dead","A","death_illness",1],["long","A","quality",0],["ship","N","object",0],["to pay","V","money",1],["window","N","home",0],["friendly","A","affection",1],["to cook","V","domestic",0],["to ask","V","speech",0],["cold","A","sensation",0],["branch","N","nature",0],["to dance","V","activity",0],["town","N","place",0],["lake","N","nature",0],["sick","A","death_illness",1],["pride","N","morality",1],["to bake","V","domestic",0],["ink","N","object",0],["angry","A","aggression",1],["needle","N","object",0],["to swim","V","activity",0],["journey","N","travel",0],["blue","A","colour",0],["lamp","N","home",0],["to sin","V","morality",1],["bread","N","food",0],["rich","A","money",1],["tree","N","nature",0],["to sting","V","pain_fear",1],["sympathy","N","affection",1],["yellow","A","colour",0],["mountain","N","nature",0],["to die","V","death_illness",1],["salt","N","food",0],["new","A","quality",0],["habit","N","morality",0],["to pray","V","morality",1],["money","N","money",1],["stupid","A","judgement",1],["leaflet","N","object",0],["despise","V","aggression",1],["finger","N","body",0],["expensive","A","money",1],["bird","N","animal",0],["to fall","V","pain_fear",1],["book","N","object",0],["unfair","A","morality",1],["frog","N","animal",0],["to leave","V","separation",1],["hunger","N","need",1],["white","A","colour",0],["child","N","family_love",1],["to look after","V","care",1],["pencil","N","object",0],["sad","A","mood",1],["apple","N","food",0],["to marry","V","family_love",1],["house","N","home",0],["loving","A","affection",1],["glass","N","object",0],["to quarrel","V","aggression",1],["coat","N","object",0],["big","A","quality",0],["carrot","N","food",0],["to paint","V","activity",0],["part","N","quality",0],["old","A","age",1],["flower","N","nature",0],["to hit","V","aggression",1],["box","N","object",0],["wild","A","quality",1],["family","N","family_love",1],["to wash","V","domestic",0],["cow","N","animal",0],["friend","N","affection",1],["luck","N","fortune",1],["lie","N","morality",1],["behavior","N","morality",1],["narrow","A","quality",0],["brother","N","family_love",1],["to fear","V","pain_fear",1],["baby","N","family_love",1],["false","A","morality",1],["anxiety","N","pain_fear",1],["to kiss","V","family_love",1],["bride","N","family_love",1],["pure","A","morality",1],["door","N","home",0],["to choose","V","decision",1],["grass","N","nature",0],["satisfied","A","mood",1],["mockery","N","aggression",1],["to sleep","V","body",0],["month","N","time",0],["nice","A","judgement",1],["woman","N","family_love",1],["to insult","V","aggression",1]]},{"id":"kent-rosanoff1910","label":"Kent & Rosanoff (1910)","authors":"G. H. Kent & A. J. Rosanoff","year":1910,"n":100,"source":"A Study of Association in Insanity, American Journal of Insanity 67 (1910). Public domain.","note":"Deliberately neutral list with population frequency norms (1,000 subjects; later Minnesota 1954, Palermo & Jenkins 1964). Theme/loaded tags are ours.","explicit":false,"words":[["table","N","object",0],["dark","A","sensation",0],["music","N","activity",0],["sickness","N","death_illness",1],["man","N","family_love",1],["deep","A","quality",0],["soft","A","sensation",0],["eating","N","food",0],["mountain","N","nature",0],["house","N","home",0],["black","A","colour",0],["mutton","N","food",0],["comfort","N","mood",1],["hand","N","body",0],["short","A","quality",0],["fruit","N","food",0],["butterfly","N","animal",0],["smooth","A","sensation",0],["command","N","morality",1],["chair","N","object",0],["sweet","A","sensation",0],["whistle","N","object",0],["woman","N","family_love",1],["cold","A","sensation",0],["slow","A","quality",0],["wish","N","need",1],["river","N","nature",0],["white","A","colour",0],["beautiful","A","judgement",1],["window","N","home",0],["rough","A","sensation",0],["citizen","N","morality",0],["foot","N","body",0],["spider","N","animal",0],["needle","N","object",0],["red","A","colour",0],["sleep","N","body",0],["anger","N","aggression",1],["carpet","N","home",0],["girl","N","family_love",1],["high","A","quality",0],["working","N","activity",0],["sour","A","sensation",0],["earth","N","nature",0],["trouble","N","pain_fear",1],["soldier","N","aggression",1],["cabbage","N","food",0],["hard","A","quality",0],["eagle","N","animal",0],["stomach","N","body",0],["stem","N","nature",0],["lamp","N","home",0],["dream","N","mood",1],["yellow","A","colour",0],["bread","N","food",0],["justice","N","morality",1],["boy","N","family_love",1],["light","N","sensation",0],["health","N","death_illness",1],["bible","N","morality",1],["memory","N","mood",1],["sheep","N","animal",0],["bath","N","domestic",0],["cottage","N","home",0],["swift","A","quality",0],["blue","A","colour",0],["hungry","A","need",1],["priest","N","morality",1],["ocean","N","nature",0],["head","N","body",0],["stove","N","home",0],["long","A","quality",0],["religion","N","morality",1],["whiskey","N","judgement",1],["child","N","family_love",1],["bitter","A","sensation",0],["hammer","N","object",0],["thirsty","A","need",1],["city","N","place",0],["square","N","quality",0],["butter","N","food",0],["doctor","N","death_illness",1],["loud","A","sensation",0],["thief","N","morality",1],["lion","N","animal",0],["joy","N","mood",1],["bed","N","home",0],["heavy","A","quality",0],["tobacco","N","judgement",1],["baby","N","family_love",1],["moon","N","nature",0],["scissors","N","object",0],["quiet","A","sensation",0],["green","A","colour",0],["salt","N","food",0],["street","N","place",0],["king","N","place",0],["cheese","N","food",0],["blossom","N","nature",0],["afraid","A","pain_fear",1]]},{"id":"rapaport1946","label":"Rapaport, Gill & Schafer (1946)","authors":"D. Rapaport, M. Gill & R. Schafer","year":1946,"n":60,"source":"Diagnostic Psychological Testing, vol. 2 (1946). Word list reconstructed from secondary sources; verify against the 1968 Holt edition.","note":"Clinical list with explicit sexual and bodily words by design.","explicit":true,"words":[["hat","N","object",0],["lamp","N","home",0],["love","N","family_love",1],["book","N","object",0],["father","N","family_love",1],["paper","N","object",0],["breast","N","sexuality",1],["curtains","N","home",0],["trunk","N","object",0],["drink","N","judgement",1],["party","N","activity",0],["spring","N","nature",0],["bowel movement","N","body",1],["rug","N","home",0],["boy friend","N","family_love",1],["chair","N","object",0],["screen","N","object",0],["penis","N","sexuality",1],["radiator","N","home",0],["frame","N","object",0],["suicide","N","death_illness",1],["mountain","N","nature",0],["snake","N","animal",1],["house","N","home",0],["vagina","N","sexuality",1],["tobacco","N","judgement",1],["mouth","N","body",0],["horse","N","animal",0],["masturbation","N","sexuality",1],["wife","N","family_love",1],["table","N","object",0],["fight","N","aggression",1],["beef","N","food",0],["stomach","N","body",0],["farm","N","place",0],["man","N","family_love",1],["taxes","N","money",1],["nipple","N","sexuality",1],["doctor","N","death_illness",1],["dirt","N","morality",1],["cut","V","pain_fear",1],["movies","N","activity",0],["cockroach","N","animal",1],["bite","V","aggression",1],["dog","N","animal",0],["dance","N","activity",0],["gun","N","aggression",1],["water","N","nature",0],["husband","N","family_love",1],["mud","N","morality",0],["woman","N","family_love",1],["fire","N","pain_fear",1],["suck","V","sexuality",1],["money","N","money",1],["mother","N","family_love",1],["hospital","N","death_illness",1],["girl friend","N","family_love",1],["taxi","N","object",0],["intercourse","N","sexuality",1],["hunger","N","need",1]]}]};   // shared/stimulus_sets.json, compacted: words as [word, pos, theme, loaded]
+const SETS = {"themes":{"death_illness":"death & illness","money":"money","morality":"morality & conscience","affection":"affection & friendship","aggression":"anger & aggression","pain_fear":"pain, fear & anxiety","family_love":"family, marriage & sexuality","mood":"mood","judgement":"judgement of others","separation":"separation","need":"need & hunger","care":"care & responsibility","decision":"choice","fortune":"luck","age":"age","body":"body","colour":"colour","nature":"nature","activity":"activity","quality":"quality","object":"object","home":"home","domestic":"domestic","speech":"speech","sensation":"sensation","place":"place","travel":"travel","food":"food","animal":"animal","time":"time","sexuality":"sexuality"},"sets":[{"id":"jung1910","label":"Jung (1910)","authors":"C. G. Jung","year":1910,"n":100,"source":"The Association Method, Clark lectures 1909, publ. 1910; English rendering of the Zurich list.","note":"Order is part of the method. Word 11 is 'table' (Jung's Tisch); the 1910 English rendering misprinted 'to cook' there as well as at 20.","explicit":false,"words":[["head","N","body",0],["green","A","colour",0],["water","N","nature",0],["to sing","V","activity",0],["dead","A","death_illness",1],["long","A","quality",0],["ship","N","object",0],["to pay","V","money",1],["window","N","home",0],["friendly","A","affection",1],["table","N","object",0],["to ask","V","speech",0],["cold","A","sensation",0],["stem","N","nature",0],["to dance","V","activity",0],["village","N","place",0],["lake","N","nature",0],["sick","A","death_illness",1],["pride","N","morality",1],["to cook","V","domestic",0],["ink","N","object",0],["angry","A","aggression",1],["needle","N","object",0],["to swim","V","activity",0],["voyage","N","travel",0],["blue","A","colour",0],["lamp","N","home",0],["to sin","V","morality",1],["bread","N","food",0],["rich","A","money",1],["tree","N","nature",0],["to prick","V","pain_fear",1],["pity","N","affection",1],["yellow","A","colour",0],["mountain","N","nature",0],["to die","V","death_illness",1],["salt","N","food",0],["new","A","quality",0],["custom","N","morality",0],["to pray","V","morality",1],["money","N","money",1],["foolish","A","judgement",1],["pamphlet","N","object",0],["despise","V","aggression",1],["finger","N","body",0],["expensive","A","money",1],["bird","N","animal",0],["to fall","V","pain_fear",1],["book","N","object",0],["unjust","A","morality",1],["frog","N","animal",0],["to part","V","separation",1],["hunger","N","need",1],["white","A","colour",0],["child","N","family_love",1],["to take care","V","care",1],["lead pencil","N","object",0],["sad","A","mood",1],["plum","N","food",0],["to marry","V","family_love",1],["house","N","home",0],["dear","A","affection",1],["glass","N","object",0],["to quarrel","V","aggression",1],["fur","N","object",0],["big","A","quality",0],["carrot","N","food",0],["to paint","V","activity",0],["part","N","quality",0],["old","A","age",1],["flower","N","nature",0],["to beat","V","aggression",1],["box","N","object",0],["wild","A","quality",1],["family","N","family_love",1],["to wash","V","domestic",0],["cow","N","animal",0],["friend","N","affection",1],["luck","N","fortune",1],["lie","N","morality",1],["deportment","N","morality",1],["narrow","A","quality",0],["brother","N","family_love",1],["to fear","V","pain_fear",1],["stork","N","family_love",1],["false","A","morality",1],["anxiety","N","pain_fear",1],["to kiss","V","family_love",1],["bride","N","family_love",1],["pure","A","morality",1],["door","N","home",0],["to choose","V","decision",1],["hay","N","nature",0],["contented","A","mood",1],["ridicule","N","aggression",1],["to sleep","V","body",0],["month","N","time",0],["nice","A","judgement",1],["woman","N","family_love",1],["to abuse","V","aggression",1]]},{"id":"jung1910-critical","label":"Jung (1910), critical words only","authors":"C. G. Jung","year":1910,"n":48,"source":"Subset of the 1910 list: the emotionally loaded stimuli, in original relative order.","note":"Our selection of the loaded words (48). No neutral buffers, so expect higher baseline disturbance.","explicit":false,"words":[["dead","A","death_illness",1],["to pay","V","money",1],["friendly","A","affection",1],["sick","A","death_illness",1],["pride","N","morality",1],["angry","A","aggression",1],["to sin","V","morality",1],["rich","A","money",1],["to prick","V","pain_fear",1],["pity","N","affection",1],["to die","V","death_illness",1],["to pray","V","morality",1],["money","N","money",1],["foolish","A","judgement",1],["despise","V","aggression",1],["expensive","A","money",1],["to fall","V","pain_fear",1],["unjust","A","morality",1],["to part","V","separation",1],["hunger","N","need",1],["child","N","family_love",1],["to take care","V","care",1],["sad","A","mood",1],["to marry","V","family_love",1],["dear","A","affection",1],["to quarrel","V","aggression",1],["old","A","age",1],["to beat","V","aggression",1],["wild","A","quality",1],["family","N","family_love",1],["friend","N","affection",1],["luck","N","fortune",1],["lie","N","morality",1],["deportment","N","morality",1],["brother","N","family_love",1],["to fear","V","pain_fear",1],["stork","N","family_love",1],["false","A","morality",1],["anxiety","N","pain_fear",1],["to kiss","V","family_love",1],["bride","N","family_love",1],["pure","A","morality",1],["to choose","V","decision",1],["contented","A","mood",1],["ridicule","N","aggression",1],["nice","A","judgement",1],["woman","N","family_love",1],["to abuse","V","aggression",1]]},{"id":"jung1910-modern","label":"Jung (1910), modern English","authors":"C. G. Jung, adapted","year":1910,"n":100,"source":"Same slots, part of speech, and themes as the 1910 list; dated words replaced.","note":"Replacements: stem\u2192branch, voyage\u2192journey, pamphlet\u2192leaflet, lead pencil\u2192pencil, deportment\u2192behavior, stork\u2192baby, custom\u2192habit, hay\u2192grass, plum\u2192apple, fur\u2192coat, pity\u2192sympathy, to prick\u2192to sting, contented\u2192satisfied, ridicule\u2192mockery, to part\u2192to leave, to take care\u2192to look after, to abuse\u2192to insult, to beat\u2192to hit, foolish\u2192stupid, unjust\u2192unfair, village\u2192town, dear\u2192loving.","explicit":false,"words":[["head","N","body",0],["green","A","colour",0],["water","N","nature",0],["to sing","V","activity",0],["dead","A","death_illness",1],["long","A","quality",0],["ship","N","object",0],["to pay","V","money",1],["window","N","home",0],["friendly","A","affection",1],["table","N","object",0],["to ask","V","speech",0],["cold","A","sensation",0],["branch","N","nature",0],["to dance","V","activity",0],["town","N","place",0],["lake","N","nature",0],["sick","A","death_illness",1],["pride","N","morality",1],["to cook","V","domestic",0],["ink","N","object",0],["angry","A","aggression",1],["needle","N","object",0],["to swim","V","activity",0],["journey","N","travel",0],["blue","A","colour",0],["lamp","N","home",0],["to sin","V","morality",1],["bread","N","food",0],["rich","A","money",1],["tree","N","nature",0],["to sting","V","pain_fear",1],["sympathy","N","affection",1],["yellow","A","colour",0],["mountain","N","nature",0],["to die","V","death_illness",1],["salt","N","food",0],["new","A","quality",0],["habit","N","morality",0],["to pray","V","morality",1],["money","N","money",1],["stupid","A","judgement",1],["leaflet","N","object",0],["despise","V","aggression",1],["finger","N","body",0],["expensive","A","money",1],["bird","N","animal",0],["to fall","V","pain_fear",1],["book","N","object",0],["unfair","A","morality",1],["frog","N","animal",0],["to leave","V","separation",1],["hunger","N","need",1],["white","A","colour",0],["child","N","family_love",1],["to look after","V","care",1],["pencil","N","object",0],["sad","A","mood",1],["apple","N","food",0],["to marry","V","family_love",1],["house","N","home",0],["loving","A","affection",1],["glass","N","object",0],["to quarrel","V","aggression",1],["coat","N","object",0],["big","A","quality",0],["carrot","N","food",0],["to paint","V","activity",0],["part","N","quality",0],["old","A","age",1],["flower","N","nature",0],["to hit","V","aggression",1],["box","N","object",0],["wild","A","quality",1],["family","N","family_love",1],["to wash","V","domestic",0],["cow","N","animal",0],["friend","N","affection",1],["luck","N","fortune",1],["lie","N","morality",1],["behavior","N","morality",1],["narrow","A","quality",0],["brother","N","family_love",1],["to fear","V","pain_fear",1],["baby","N","family_love",1],["false","A","morality",1],["anxiety","N","pain_fear",1],["to kiss","V","family_love",1],["bride","N","family_love",1],["pure","A","morality",1],["door","N","home",0],["to choose","V","decision",1],["grass","N","nature",0],["satisfied","A","mood",1],["mockery","N","aggression",1],["to sleep","V","body",0],["month","N","time",0],["nice","A","judgement",1],["woman","N","family_love",1],["to insult","V","aggression",1]]},{"id":"kent-rosanoff1910","label":"Kent & Rosanoff (1910)","authors":"G. H. Kent & A. J. Rosanoff","year":1910,"n":100,"source":"A Study of Association in Insanity, American Journal of Insanity 67 (1910). Public domain.","note":"Deliberately neutral list with population frequency norms (1,000 subjects; later Minnesota 1954, Palermo & Jenkins 1964). Theme/loaded tags are ours.","explicit":false,"words":[["table","N","object",0],["dark","A","sensation",0],["music","N","activity",0],["sickness","N","death_illness",1],["man","N","family_love",1],["deep","A","quality",0],["soft","A","sensation",0],["eating","N","food",0],["mountain","N","nature",0],["house","N","home",0],["black","A","colour",0],["mutton","N","food",0],["comfort","N","mood",1],["hand","N","body",0],["short","A","quality",0],["fruit","N","food",0],["butterfly","N","animal",0],["smooth","A","sensation",0],["command","N","morality",1],["chair","N","object",0],["sweet","A","sensation",0],["whistle","N","object",0],["woman","N","family_love",1],["cold","A","sensation",0],["slow","A","quality",0],["wish","N","need",1],["river","N","nature",0],["white","A","colour",0],["beautiful","A","judgement",1],["window","N","home",0],["rough","A","sensation",0],["citizen","N","morality",0],["foot","N","body",0],["spider","N","animal",0],["needle","N","object",0],["red","A","colour",0],["sleep","N","body",0],["anger","N","aggression",1],["carpet","N","home",0],["girl","N","family_love",1],["high","A","quality",0],["working","N","activity",0],["sour","A","sensation",0],["earth","N","nature",0],["trouble","N","pain_fear",1],["soldier","N","aggression",1],["cabbage","N","food",0],["hard","A","quality",0],["eagle","N","animal",0],["stomach","N","body",0],["stem","N","nature",0],["lamp","N","home",0],["dream","N","mood",1],["yellow","A","colour",0],["bread","N","food",0],["justice","N","morality",1],["boy","N","family_love",1],["light","N","sensation",0],["health","N","death_illness",1],["bible","N","morality",1],["memory","N","mood",1],["sheep","N","animal",0],["bath","N","domestic",0],["cottage","N","home",0],["swift","A","quality",0],["blue","A","colour",0],["hungry","A","need",1],["priest","N","morality",1],["ocean","N","nature",0],["head","N","body",0],["stove","N","home",0],["long","A","quality",0],["religion","N","morality",1],["whiskey","N","judgement",1],["child","N","family_love",1],["bitter","A","sensation",0],["hammer","N","object",0],["thirsty","A","need",1],["city","N","place",0],["square","N","quality",0],["butter","N","food",0],["doctor","N","death_illness",1],["loud","A","sensation",0],["thief","N","morality",1],["lion","N","animal",0],["joy","N","mood",1],["bed","N","home",0],["heavy","A","quality",0],["tobacco","N","judgement",1],["baby","N","family_love",1],["moon","N","nature",0],["scissors","N","object",0],["quiet","A","sensation",0],["green","A","colour",0],["salt","N","food",0],["street","N","place",0],["king","N","place",0],["cheese","N","food",0],["blossom","N","nature",0],["afraid","A","pain_fear",1]]},{"id":"rapaport1946","label":"Rapaport, Gill & Schafer (1946)","authors":"D. Rapaport, M. Gill & R. Schafer","year":1946,"n":60,"source":"Diagnostic Psychological Testing, vol. 2 (1946). Word list reconstructed from secondary sources; verify against the 1968 Holt edition.","note":"Clinical list with explicit sexual and bodily words by design.","explicit":true,"words":[["hat","N","object",0],["lamp","N","home",0],["love","N","family_love",1],["book","N","object",0],["father","N","family_love",1],["paper","N","object",0],["breast","N","sexuality",1],["curtains","N","home",0],["trunk","N","object",0],["drink","N","judgement",1],["party","N","activity",0],["spring","N","nature",0],["bowel movement","N","body",1],["rug","N","home",0],["boy friend","N","family_love",1],["chair","N","object",0],["screen","N","object",0],["penis","N","sexuality",1],["radiator","N","home",0],["frame","N","object",0],["suicide","N","death_illness",1],["mountain","N","nature",0],["snake","N","animal",1],["house","N","home",0],["vagina","N","sexuality",1],["tobacco","N","judgement",1],["mouth","N","body",0],["horse","N","animal",0],["masturbation","N","sexuality",1],["wife","N","family_love",1],["table","N","object",0],["fight","N","aggression",1],["beef","N","food",0],["stomach","N","body",0],["farm","N","place",0],["man","N","family_love",1],["taxes","N","money",1],["nipple","N","sexuality",1],["doctor","N","death_illness",1],["dirt","N","morality",1],["cut","V","pain_fear",1],["movies","N","activity",0],["cockroach","N","animal",1],["bite","V","aggression",1],["dog","N","animal",0],["dance","N","activity",0],["gun","N","aggression",1],["water","N","nature",0],["husband","N","family_love",1],["mud","N","morality",0],["woman","N","family_love",1],["fire","N","pain_fear",1],["suck","V","sexuality",1],["money","N","money",1],["mother","N","family_love",1],["hospital","N","death_illness",1],["girl friend","N","family_love",1],["taxi","N","object",0],["intercourse","N","sexuality",1],["hunger","N","need",1]]}]};   // shared/stimulus_sets.json, compacted: words as [word, pos, theme, loaded]
 const setById = id => SETS.sets.find(x => x.id === id) || SETS.sets[0];
 /* S.list is the session's stimulus list in presentation order: [{w,pos,theme,loaded,listPos}] */
 const buildList = (set, shuffle, n) => {
@@ -605,8 +618,7 @@ const buildList = (set, shuffle, n) => {
 
 /* ---------------- Config ---------------- */
 const CONFIG = {
-  rtFactor: 1.0,   // Jung's rule: mark anything above the subject's own median ("probable mean")
-  rtFloorMs: 0,
+  rtMarginMs: 400,   // Jung's two-fifths rule: a delay counts only when it exceeds the subject's own probable mean (median) by 0.4 s or more
   timeoutMs: 12000
 };
 
@@ -630,12 +642,8 @@ const norm = s => (s || '').toLowerCase().replace(/^to /, '').replace(/[^a-z' ]/
    can't be fetched - a copy opened from file://, or a clip that never arrives -
    and then it gets the same corrected text and the nearest accent it has. */
 const VOICES = [
-  { id: 'us-female', label: 'American · woman', note: 'General American', lang: 'en-US', sys: ['Samantha', 'Google US English', 'Ava', 'Allison'] },
-  { id: 'us-male', label: 'American · man', note: 'General American', lang: 'en-US', sys: ['Alex', 'Aaron', 'Google US English', 'Tom'] },
-  { id: 'gb-female', label: 'British · woman', note: 'Southern English', lang: 'en-GB', sys: ['Kate', 'Serena', 'Google UK English Female', 'Stephanie'] },
-  { id: 'gb-male', label: 'British · man', note: 'Southern English', lang: 'en-GB', sys: ['Daniel', 'Google UK English Male', 'Oliver'] },
-  { id: 'north-male', label: 'Northern English · man', note: 'Yorkshire', lang: 'en-GB', sys: ['Daniel', 'Google UK English Male'] },
-  { id: 'scot-female', label: 'Scottish · woman', note: 'Scots English', lang: 'en-GB', sys: ['Fiona', 'Moira', 'Google UK English Female'] }
+  { id: 'us-female', label: 'Female', note: 'General American', lang: 'en-US', sys: ['Samantha', 'Google US English', 'Ava', 'Allison'] },
+  { id: 'us-male', label: 'Male', note: 'General American', lang: 'en-US', sys: ['Alex', 'Aaron', 'Google US English', 'Tom'] }
 ];
 // Kept in step with SPOKEN_AS in tools/build_voices.py; the recordings already
 // say these correctly, this is for the synthesiser fallback.
@@ -760,14 +768,16 @@ function refreshSet() {
 }
 $('set').onchange = refreshSet; refreshSet();
 
-VOICES.forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = `${v.label} · ${v.note}`; $('voice').appendChild(o); });
+VOICES.forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = v.label; $('voice').appendChild(o); });
 function refreshVoice() {
   const spoken = $('present').value !== 'written';
   $('voicefield').classList.toggle('hide', !spoken || !Say.available());
   $('voicenote').classList.toggle('hide', !spoken || !Say.available());
+  $('voicetest').classList.toggle('hide', !spoken || !Say.available());
   $('voicenote').textContent = 'Every word is a real recording of this voice, not a computer reading it out. If the recordings can’t be loaded, your browser’s own voice fills in.';
   Say.use($('voice').value);
 }
+$('voicetest').onclick = () => { Say.unlock(); Say.speak('head').then(() => Say.speak('water')); };
 $('present').onchange = refreshVoice; $('voice').onchange = refreshVoice; refreshVoice();
 
 $('start').onclick = () => {
@@ -988,16 +998,16 @@ $('fix').addEventListener('focus', () => { S.ignoreUntil = Infinity; });      //
 $('fix').addEventListener('blur', () => { S.ignoreUntil = performance.now() + 200; });
 
 
-/* ---------------- Timing analysis: median and Jung's above-median rule ---------------- */
+/* ---------------- Timing analysis: median and Jung's two-fifths rule ---------------- */
 function analyse(items) {
   const rts = items.map(x => x.reactionMs).filter(x => x !== null).sort((a, b) => a - b);
   const median = rts.length ? rts[Math.floor(rts.length / 2)] : 0;
-  const rtCut = Math.max(median * CONFIG.rtFactor, CONFIG.rtFloorMs);
+  const rtCut = median + CONFIG.rtMarginMs;   // the subject's own data only: no population norms anywhere
   items.forEach(it => {
     it.flags = [];
     it.rtRatio = (it.reactionMs !== null && median) ? +(it.reactionMs / median).toFixed(2) : null;
     if (!it.response) it.flags.push('NO_RESPONSE');   // a blank is a stronger sign than a slow answer
-    else if (it.reactionMs !== null && it.reactionMs > rtCut) it.flags.push('LONG_RT');
+    else if (it.reactionMs !== null && it.reactionMs >= rtCut) it.flags.push('LONG_RT');
   });
   return { median, rtCut };
 }
@@ -1034,7 +1044,7 @@ async function importSession(text) {
   S.items = payload.items.map((r, k) => normalizeItem(r, k, S.set)); S.i = S.items.length; S.n = S.items.length;
   S.imported = { recordedAt: payload.recordedAt, schema: payload.schema };
   $('setup').classList.add('hide');
-  finish();
+  finish(true);
 }
 $('impfile').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -1048,12 +1058,14 @@ $('impgo').onclick = () => {
 };
 
 /* ---------------- Results: the protocol sheet, words and timing only ---------------- */
-async function finish() {
+async function finish(straightToSheet) {
   S.epoch++;   // any word still waiting on its recording belongs to a finished run
   Mic.stop();
-  $('test').classList.add('hide'); $('results').classList.remove('hide');
-  renderSheet();
+  $('test').classList.add('hide');
+  if (straightToSheet) { $('results').classList.remove('hide'); renderSheet(); return; }
+  $('preview').classList.remove('hide'); window.scrollTo(0, 0);
 }
+$('previewgo').onclick = () => { $('preview').classList.add('hide'); $('results').classList.remove('hide'); renderSheet(); window.scrollTo(0, 0); };
 /* The sheet re-renders after every edit, flag, or sieve pass; measurement (carmine, grey)
    and the reader's own judgment (starred flags, notes, sieve lines) stay visually distinct. */
 function renderSheet() {
@@ -1064,17 +1076,16 @@ function renderSheet() {
     + (S.imported ? ` \u00B7 imported${S.imported.recordedAt ? ', recorded ' + new Date(S.imported.recordedAt).toLocaleDateString() : ''}` : '');
   $('s_median').textContent = A.median ? secs(A.median) + ' s' : '\u2013';
   $('s_flag').textContent = `${marked.length} / ${S.items.length}`;
-  $('scorenote').textContent = A.median ? `Reaction times above your median (${secs(A.rtCut)} s) are marked, per Jung. The record is the measurement; the reading of it is yours.` : '';
+  $('scorenote').textContent = A.median ? `Reactions 0.4 s or more slower than your own median are marked, following Jung's rule: ${secs(A.rtCut)} s and up in this test. The record is the measurement; the reading of it is yours.` : '';
   const tb = $('ledger'); tb.innerHTML = '';
   S.items.forEach((it, k) => {
     const tr = document.createElement('tr');
-    if (it.flags.includes('NO_RESPONSE') || (it.rtRatio !== null && it.rtRatio >= 2)) tr.className = 'flagged';
+    if (it.flags.includes('NO_RESPONSE') || (it.flags.includes('LONG_RT') && it.rtRatio >= 2)) tr.className = 'flagged';
     else if (it.flags.includes('LONG_RT')) tr.className = 'marked';
     if (it.userFlag) tr.classList.add('userflag');
-    tr.innerHTML = `<td class="n">${it.index}${it.loaded ? '<span class="ld" title="loaded stimulus">\u2022</span>' : ''}${it.userFlag ? '<span class="uf" title="your flag">\u2731</span>' : ''}</td><td class="w">${it.stimulus}</td>
-      <td class="r"><span class="rtext">${it.response || '<span class="muted">\u2014</span>'}</span>${it.corrected ? `<span class="muted" style="font-size:12px"> (heard: ${it.rawResponse})</span>` : ''}<button class="pencil" title="fix a misheard response">\u270E</button>${it.userFlag && it.userNote ? `<div class="sievenote">\u2731 ${it.userNote}</div>` : ''}${it.sieve ? `<div class="sievenote">${it.sieve}</div>` : ''}</td>
-      <td class="t">${it.reactionMs === null ? '\u2014' : secs(it.reactionMs) + ' s'}</td>
-      <td class="t">${it.rtRatio === null ? '\u2014' : it.rtRatio.toFixed(1)}</td>`;
+    tr.innerHTML = `<td class="n">${it.index}${S.clinician && it.loaded ? '<span class="ld" title="loaded stimulus">\u2022</span>' : ''}${it.userFlag ? '<span class="uf" title="your flag">\u2731</span>' : ''}</td><td class="w">${it.stimulus}</td>
+      <td class="r"><span class="rtext">${it.response || '<span class="muted">\u2014</span>'}</span>${it.corrected ? `<span class="muted" style="font-size:12px"> (heard: ${it.rawResponse})</span>` : ''}<button class="pencil" title="edit this response">\u270E</button>${it.userFlag && it.userNote ? `<div class="sievenote">\u2731 ${it.userNote}</div>` : ''}${it.sieve ? `<div class="sievenote">${it.sieve}</div>` : ''}</td>
+      <td class="t">${it.reactionMs === null ? '\u2014' : secs(it.reactionMs) + ' s'}</td>`;
     // tap the row to flag it and say why; the pencil and inputs do their own thing
     tr.addEventListener('click', e => {
       if (e.target.closest('.pencil') || e.target.closest('input') || e.target.closest('.respedit')) return;
@@ -1189,11 +1200,11 @@ function sieveWhy(it) {
   const r = [];
   if (it.userFlag) r.push('\u2731 your flag');
   if (it.flags.includes('NO_RESPONSE')) r.push('no answer');
-  else if (it.rtRatio !== null && it.rtRatio >= 2) r.push(it.rtRatio.toFixed(1) + '\u00D7 median');
-  else if (it.flags.includes('LONG_RT')) r.push('above median');
+  else if (it.flags.includes('LONG_RT') && it.rtRatio >= 2) r.push(it.rtRatio.toFixed(1) + '\u00D7 median');
+  else if (it.flags.includes('LONG_RT')) r.push('slow reaction');
   return r.join(' \u00B7 ');
 }
-function sievePrechecked(it) { return it.userFlag || it.flags.includes('NO_RESPONSE') || (it.rtRatio !== null && it.rtRatio >= 2); }
+function sievePrechecked(it) { return it.userFlag || it.flags.includes('NO_RESPONSE') || (it.flags.includes('LONG_RT') && it.rtRatio >= 2); }
 function sieveSpeak() {
   // same voice and the same recordings as the run, so the word arrives the way it did then
   if (!Say.available() || !S.sieveItems) return;
@@ -1249,12 +1260,80 @@ $('sv_next').onclick = () => {
 };
 $('sv_prev').onclick = () => { sieveSave(); if (S.sieveIdx > 0) { S.sieveIdx--; sieveShow(); } };
 
-$('export').onclick = () => {
+/* ---------------- Save: JSON (the record, re-openable), CSV and Excel (the sheet as a table) ---------------- */
+function sessionMeta() {
   const v = Say.current();
-  const payload = { schema: 'jung-wat/session/v5', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, presentation: S.presentMode || 'both', voice: S.speak ? { id: v.id, label: v.label, accent: v.note, source: Say.source() } : null, summary: S.summary, items: S.items };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wat_${S.subject}_${Date.now()}.json`; a.click();
+  return { schema: 'jung-wat/session/v5', set: S.set.id, setLabel: S.set.label, shuffled: !!S.shuffle, subject: S.subject, recordedAt: new Date().toISOString(), userAgent: navigator.userAgent, inputMode: S.mode, spokenStimulus: S.speak, presentation: S.presentMode || 'both', voice: S.speak ? { id: v.id, label: v.label, accent: v.note, source: Say.source() } : null, summary: S.summary };
+}
+function download(blob, ext) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `wat_${S.subject}_${Date.now()}.${ext}`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+function sheetRows() {
+  const head = ['#', 'list position', 'stimulus', 'response', 'heard as', 'corrected', 'reaction s', 'reaction ms', 'fifths', 'completion ms', 'input', 'mark', 'your flag', 'your note', 'sieve'];
+  if (S.clinician) head.push('loaded stimulus');
+  const rows = S.items.map(it => {
+    const r = [it.index, it.listPosition, it.stimulus, it.response || '', it.corrected ? (it.rawResponse || '') : '', !!it.corrected,
+      it.reactionMs === null ? '' : +secs(it.reactionMs), it.reactionMs === null ? '' : it.reactionMs, it.reactionFifths === null ? '' : it.reactionFifths, it.completionMs ?? '', it.inputMode || '',
+      it.flags.includes('NO_RESPONSE') ? 'no answer' : it.flags.includes('LONG_RT') ? 'slow reaction' : '', !!it.userFlag, it.userNote || '', it.sieve || ''];
+    if (S.clinician) r.push(!!it.loaded);
+    return r;
+  });
+  return [head, ...rows];
+}
+function metaRows() {
+  const m = sessionMeta();
+  return [['name', m.subject], ['word set', m.setLabel], ['shuffled', m.shuffled], ['recorded', m.recordedAt], ['answered by', m.inputMode], ['presentation', m.presentation], ['voice', m.voice ? m.voice.label : ''],
+    ['median ms', m.summary ? m.summary.medianMs : ''], ['cutoff ms', m.summary ? m.summary.rtCutoffMs : ''], ['rule', 'marked when the reaction is 0.4 s or more above the median'], ['schema', m.schema]];
+}
+$('export').onclick = () => download(new Blob([JSON.stringify({ ...sessionMeta(), items: S.items }, null, 2)], { type: 'application/json' }), 'json');
+$('exportcsv').onclick = () => {
+  const cell = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const text = '\uFEFF' + sheetRows().map(r => r.map(cell).join(',')).join('\r\n') + '\r\n';
+  download(new Blob([text], { type: 'text/csv;charset=utf-8' }), 'csv');
 };
+/* A minimal .xlsx: two worksheets in an uncompressed zip, written here so the app keeps its
+   single-file, no-library shape. Excel, Numbers and LibreOffice all open stored entries. */
+function crc32(u8) {
+  const t = crc32.t || (crc32.t = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); return c >>> 0; }));
+  let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = t[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
+  const u16 = v => [v & 255, (v >> 8) & 255], u32 = v => [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255];
+  files.forEach(f => {
+    const name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+    const local = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...name]);
+    central.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset), ...name]));
+    parts.push(local, data); offset += local.length + data.length;
+  });
+  const size = central.reduce((a, b) => a + b.length, 0);
+  const end = new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(size), ...u32(offset), ...u16(0)]);
+  return new Blob([...parts, ...central, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function sheetXml(rows) {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  const col = n => { let s = ''; n++; while (n) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const body = rows.map((r, i) => '<row r="' + (i + 1) + '">' + r.map((v, j) => {
+    if (v === null || v === undefined || v === '') return '';
+    const ref = col(j) + (i + 1);
+    if (typeof v === 'number') return `<c r="${ref}"><v>${v}</v></c>`;
+    if (typeof v === 'boolean') return `<c r="${ref}" t="b"><v>${v ? 1 : 0}</v></c>`;
+    return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+  }).join('') + '</row>').join('');
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' + body + '</sheetData></worksheet>';
+}
+function xlsxBlob(sheets) {
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const files = [
+    { name: '[Content_Types].xml', data: X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' + sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>' },
+    { name: '_rels/.rels', data: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+    { name: 'xl/workbook.xml', data: X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + sheets.map((s, i) => `<sheet name="${s.name}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>' },
+    { name: 'xl/_rels/workbook.xml.rels', data: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') + '</Relationships>' }
+  ];
+  sheets.forEach((s, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: sheetXml(s.rows) }));
+  return zipStore(files);
+}
+$('exportxlsx').onclick = () => download(xlsxBlob([{ name: 'Protocol', rows: sheetRows() }, { name: 'Session', rows: metaRows() }]), 'xlsx');
+$('clinician').onchange = () => { S.clinician = $('clinician').checked; renderSheet(); };
 $('again').onclick = () => { SieveMic.stop(); S.imported = null; $('imptext').value = ''; $('impfile').value = ''; $('results').classList.add('hide'); $('setup').classList.remove('hide'); };
 </script>
 </body>
