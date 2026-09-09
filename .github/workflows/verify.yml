@@ -1,6 +1,13 @@
 name: Verify Pages site
 on:
   workflow_dispatch:
+    inputs:
+      phrase:
+        description: text that must appear in the live index.html
+        default: word association protocol
+      asset:
+        description: a path under the site that must return 200 (blank to skip)
+        default: ''
 permissions:
   pages: read
 jobs:
@@ -14,14 +21,22 @@ jobs:
           curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/Vigneutron/jung-wat/pages | head -c 600; echo
       - name: Poll the live URL
+        env:
+          PHRASE: ${{ inputs.phrase || 'word association protocol' }}
+          ASSET: ${{ inputs.asset }}
         run: |
           set -euo pipefail
           url="https://vigneutron.github.io/jung-wat/"
-          echo "Polling $url"
+          echo "Polling $url for: $PHRASE"
           for i in $(seq 1 30); do
             http=$(curl -s -o /tmp/body -w "%{http_code}" --max-time 15 "$url" || echo 000)
-            if grep -q "word association protocol" /tmp/body; then
-              echo "OK: $url serves the app (HTTP $http)."
+            if grep -qF "$PHRASE" /tmp/body; then
+              echo "OK: $url serves the app with the phrase (HTTP $http)."
+              if [ -n "$ASSET" ]; then
+                ahttp=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$url$ASSET" || echo 000)
+                echo "asset $ASSET: HTTP $ahttp"
+                [ "$ahttp" = "200" ] || { echo "::error::$ASSET not served"; exit 1; }
+              fi
               exit 0
             fi
             echo "attempt $i: HTTP $http"; sleep 10
